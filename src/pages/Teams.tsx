@@ -153,11 +153,16 @@ const Teams = () => {
     setMyTeam(null); setMyTeamMembers([]); loadData();
   };
 
-  const startDungeon = async () => {
+  const startMission = async () => {
     if (!myTeam || !myTeam.target_location_id) return;
     if (!myTeamMembers.every(m => m.ready)) { toast.error('Nem mindenki kész!'); return; }
     await supabase.from('teams').update({ status: 'in_progress' }).eq('id', myTeam.id);
-    navigate(`/dungeon/${myTeam.target_location_id}`);
+    const loc = locations.find(l => l.id === myTeam.target_location_id);
+    if (loc?.type === 'zone') {
+      navigate(`/combat/${myTeam.target_location_id}`);
+    } else {
+      navigate(`/dungeon/${myTeam.target_location_id}`);
+    }
   };
 
   // Invite functions
