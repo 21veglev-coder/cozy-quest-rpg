@@ -242,6 +242,16 @@ export interface TeamMember {
   joined_at: string;
 }
 
+export interface Invite {
+  id: string;
+  type: 'team' | 'clan';
+  target_id: string;
+  from_user_id: string;
+  to_user_id: string;
+  status: 'pending' | 'accepted' | 'declined';
+  created_at: string;
+}
+
 // ---- PERK DEFINITIONS ----
 export interface PerkDef {
   id: string;
