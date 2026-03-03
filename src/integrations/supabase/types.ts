@@ -472,6 +472,7 @@ export type Database = {
           price: number
           rarity: string
           set_name: string | null
+          shop_name: string
           spd: number
           subclass_req: string | null
           type: string
@@ -492,6 +493,7 @@ export type Database = {
           price?: number
           rarity?: string
           set_name?: string | null
+          shop_name?: string
           spd?: number
           subclass_req?: string | null
           type: string
@@ -512,6 +514,7 @@ export type Database = {
           price?: number
           rarity?: string
           set_name?: string | null
+          shop_name?: string
           spd?: number
           subclass_req?: string | null
           type?: string
