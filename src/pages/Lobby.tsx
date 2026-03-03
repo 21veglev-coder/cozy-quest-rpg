@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
-import { GameCharacter, CLASSES, InventoryItem } from '@/types/game';
+import { GameCharacter, CLASSES, SUBCLASSES, InventoryItem } from '@/types/game';
 import ChatPanel from '@/components/ChatPanel';
 import CharacterSheet from '@/components/CharacterSheet';
 import InventoryPanel from '@/components/InventoryPanel';
