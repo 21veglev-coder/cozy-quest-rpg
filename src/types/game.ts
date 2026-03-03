@@ -310,7 +310,36 @@ export const PERKS: PerkDef[] = [
   { id: 'fortune', name: 'Szerencse', icon: '🍀', description: 'CRIT +2%/tier', maxTier: 3, classReq: null, subclassReq: null, effect: t => ({ crit: t * 2 }) },
 ];
 
-// ---- ENEMY DEFINITIONS ----
+// ---- ENEMY AI ABILITIES ----
+export interface EnemyAbility {
+  name: string;
+  icon: string;
+  chance: number; // 0-100, checked each turn
+  type: 'attack' | 'heal' | 'buff' | 'debuff';
+  damage?: number; // flat or multiplier
+  damageMultiplier?: number;
+  heal?: number;
+  selfBuff?: { atk?: number; def?: number; spd?: number; turns: number };
+  playerDebuff?: { atk?: number; def?: number; spd?: number; turns: number };
+  condition?: 'low_hp' | 'always'; // low_hp = <30% HP
+  description: string;
+}
+
+// Shared enemy abilities
+const ENEMY_ABILITIES: Record<string, EnemyAbility> = {
+  heavy_strike: { name: 'Erős Csapás', icon: '💥', chance: 25, type: 'attack', damageMultiplier: 1.8, condition: 'always', description: 'Hatalmas ütés!' },
+  enrage: { name: 'Megvadulás', icon: '😤', chance: 80, type: 'buff', selfBuff: { atk: 8, turns: 3 }, condition: 'low_hp', description: 'Az ellenség megvadult!' },
+  poison_spit: { name: 'Méreg Köpés', icon: '🤮', chance: 30, type: 'debuff', playerDebuff: { atk: -3, def: -2, spd: 0, turns: 2 }, damage: 5, condition: 'always', description: 'Méreg fröccsen!' },
+  heal_self: { name: 'Regeneráció', icon: '💚', chance: 40, type: 'heal', heal: 25, condition: 'low_hp', description: 'Az ellenség gyógyul!' },
+  war_cry: { name: 'Harci Üvöltés', icon: '📣', chance: 20, type: 'buff', selfBuff: { atk: 5, def: 3, turns: 2 }, condition: 'always', description: 'Harci üvöltés zeng!' },
+  shield_up: { name: 'Védekezés', icon: '🛡️', chance: 30, type: 'buff', selfBuff: { def: 8, turns: 2 }, condition: 'always', description: 'Védekezésbe húzódik!' },
+  dark_blast: { name: 'Sötét Robbanás', icon: '💀', chance: 35, type: 'attack', damageMultiplier: 2.0, condition: 'always', description: 'Sötét energia robban!' },
+  vampiric_bite: { name: 'Vámpír Harapás', icon: '🧛', chance: 40, type: 'attack', damageMultiplier: 1.5, heal: 15, condition: 'always', description: 'Vért szív!' },
+  fire_breath: { name: 'Tűzokádás', icon: '🔥', chance: 30, type: 'attack', damageMultiplier: 2.2, condition: 'always', description: 'Lángcsóva!' },
+  ice_blast: { name: 'Jéglövedék', icon: '❄️', chance: 30, type: 'attack', damageMultiplier: 1.6, playerDebuff: { atk: 0, def: 0, spd: -5, turns: 2 }, condition: 'always', description: 'Fagyos lövedék!' },
+  boss_enrage: { name: 'Bosszúállás', icon: '👿', chance: 100, type: 'buff', selfBuff: { atk: 15, spd: 5, turns: 99 }, condition: 'low_hp', description: 'A BOSS MEGVADULT!' },
+};
+
 export interface EnemyDef {
   name: string;
   icon: string;
@@ -324,53 +353,67 @@ export interface EnemyDef {
   locationType: 'zone' | 'dungeon' | 'raid';
   minZoneLevel: number;
   world?: number;
+  abilities?: EnemyAbility[];
+}
+
+export function getEnemyAction(enemy: EnemyDef, currentHp: number): EnemyAbility | null {
+  if (!enemy.abilities || enemy.abilities.length === 0) return null;
+  const hpPercent = currentHp / enemy.hp;
+  const eligible = enemy.abilities.filter(a => {
+    if (a.condition === 'low_hp' && hpPercent > 0.3) return false;
+    return true;
+  });
+  for (const ability of eligible.sort((a, b) => b.chance - a.chance)) {
+    if (Math.random() * 100 < ability.chance) return ability;
+  }
+  return null;
 }
 
 export const ENEMIES: EnemyDef[] = [
   // World 1 - Zone
   { name: 'Goblin', icon: '👺', level: 1, hp: 30, atk: 5, def: 2, spd: 8, xpReward: 15, goldReward: 5, locationType: 'zone', minZoneLevel: 1, world: 1 },
-  { name: 'Farkas', icon: '🐺', level: 2, hp: 45, atk: 8, def: 3, spd: 12, xpReward: 25, goldReward: 8, locationType: 'zone', minZoneLevel: 1, world: 1 },
-  { name: 'Pók Királyné', icon: '🕷️', level: 3, hp: 60, atk: 10, def: 5, spd: 6, xpReward: 40, goldReward: 15, locationType: 'zone', minZoneLevel: 3, world: 1 },
-  { name: 'Bandita', icon: '🥷', level: 2, hp: 40, atk: 9, def: 4, spd: 10, xpReward: 20, goldReward: 10, locationType: 'zone', minZoneLevel: 1, world: 1 },
-  { name: 'Mérgező Kígyó', icon: '🐍', level: 3, hp: 35, atk: 12, def: 2, spd: 15, xpReward: 30, goldReward: 12, locationType: 'zone', minZoneLevel: 2, world: 1 },
-  { name: 'Csontváz Harcos', icon: '💀', level: 5, hp: 80, atk: 14, def: 8, spd: 7, xpReward: 60, goldReward: 20, locationType: 'zone', minZoneLevel: 5, world: 1 },
-  { name: 'Medveember', icon: '🐻', level: 4, hp: 95, atk: 13, def: 10, spd: 6, xpReward: 50, goldReward: 18, locationType: 'zone', minZoneLevel: 3, world: 1 },
-  { name: 'Tűz Elementál', icon: '🔥', level: 7, hp: 120, atk: 20, def: 6, spd: 10, xpReward: 100, goldReward: 35, locationType: 'zone', minZoneLevel: 7, world: 1 },
-  { name: 'Szellem', icon: '👻', level: 6, hp: 70, atk: 18, def: 2, spd: 18, xpReward: 75, goldReward: 25, locationType: 'zone', minZoneLevel: 5, world: 1 },
-  { name: 'Orc Harcvezér', icon: '👹', level: 6, hp: 110, atk: 16, def: 11, spd: 7, xpReward: 85, goldReward: 30, locationType: 'zone', minZoneLevel: 5, world: 1 },
-  { name: 'Jég Elem', icon: '❄️', level: 8, hp: 130, atk: 19, def: 8, spd: 9, xpReward: 110, goldReward: 40, locationType: 'zone', minZoneLevel: 7, world: 1 },
-  { name: 'Sötét Lovag', icon: '🏇', level: 9, hp: 160, atk: 23, def: 14, spd: 11, xpReward: 140, goldReward: 50, locationType: 'zone', minZoneLevel: 8, world: 1 },
+  { name: 'Farkas', icon: '🐺', level: 2, hp: 45, atk: 8, def: 3, spd: 12, xpReward: 25, goldReward: 8, locationType: 'zone', minZoneLevel: 1, world: 1, abilities: [ENEMY_ABILITIES.enrage] },
+  { name: 'Pók Királyné', icon: '🕷️', level: 3, hp: 60, atk: 10, def: 5, spd: 6, xpReward: 40, goldReward: 15, locationType: 'zone', minZoneLevel: 3, world: 1, abilities: [ENEMY_ABILITIES.poison_spit] },
+  { name: 'Bandita', icon: '🥷', level: 2, hp: 40, atk: 9, def: 4, spd: 10, xpReward: 20, goldReward: 10, locationType: 'zone', minZoneLevel: 1, world: 1, abilities: [ENEMY_ABILITIES.heavy_strike] },
+  { name: 'Mérgező Kígyó', icon: '🐍', level: 3, hp: 35, atk: 12, def: 2, spd: 15, xpReward: 30, goldReward: 12, locationType: 'zone', minZoneLevel: 2, world: 1, abilities: [ENEMY_ABILITIES.poison_spit, ENEMY_ABILITIES.enrage] },
+  { name: 'Csontváz Harcos', icon: '💀', level: 5, hp: 80, atk: 14, def: 8, spd: 7, xpReward: 60, goldReward: 20, locationType: 'zone', minZoneLevel: 5, world: 1, abilities: [ENEMY_ABILITIES.heavy_strike, ENEMY_ABILITIES.shield_up] },
+  { name: 'Medveember', icon: '🐻', level: 4, hp: 95, atk: 13, def: 10, spd: 6, xpReward: 50, goldReward: 18, locationType: 'zone', minZoneLevel: 3, world: 1, abilities: [ENEMY_ABILITIES.war_cry, ENEMY_ABILITIES.enrage] },
+  { name: 'Tűz Elementál', icon: '🔥', level: 7, hp: 120, atk: 20, def: 6, spd: 10, xpReward: 100, goldReward: 35, locationType: 'zone', minZoneLevel: 7, world: 1, abilities: [ENEMY_ABILITIES.fire_breath, ENEMY_ABILITIES.enrage] },
+  { name: 'Szellem', icon: '👻', level: 6, hp: 70, atk: 18, def: 2, spd: 18, xpReward: 75, goldReward: 25, locationType: 'zone', minZoneLevel: 5, world: 1, abilities: [ENEMY_ABILITIES.dark_blast] },
+  { name: 'Orc Harcvezér', icon: '👹', level: 6, hp: 110, atk: 16, def: 11, spd: 7, xpReward: 85, goldReward: 30, locationType: 'zone', minZoneLevel: 5, world: 1, abilities: [ENEMY_ABILITIES.war_cry, ENEMY_ABILITIES.heavy_strike, ENEMY_ABILITIES.enrage] },
+  { name: 'Jég Elem', icon: '❄️', level: 8, hp: 130, atk: 19, def: 8, spd: 9, xpReward: 110, goldReward: 40, locationType: 'zone', minZoneLevel: 7, world: 1, abilities: [ENEMY_ABILITIES.ice_blast, ENEMY_ABILITIES.shield_up] },
+  { name: 'Sötét Lovag', icon: '🏇', level: 9, hp: 160, atk: 23, def: 14, spd: 11, xpReward: 140, goldReward: 50, locationType: 'zone', minZoneLevel: 8, world: 1, abilities: [ENEMY_ABILITIES.heavy_strike, ENEMY_ABILITIES.shield_up, ENEMY_ABILITIES.enrage] },
   // World 1 - Dungeon
-  { name: 'Sötét Varázsló', icon: '🧙‍♂️', level: 4, hp: 70, atk: 16, def: 4, spd: 9, xpReward: 80, goldReward: 30, locationType: 'dungeon', minZoneLevel: 4, world: 1 },
-  { name: 'Kőgolem', icon: '🗿', level: 5, hp: 150, atk: 12, def: 18, spd: 3, xpReward: 90, goldReward: 25, locationType: 'dungeon', minZoneLevel: 4, world: 1 },
-  { name: 'Vámpír Gróf', icon: '🧛', level: 6, hp: 100, atk: 18, def: 10, spd: 14, xpReward: 120, goldReward: 45, locationType: 'dungeon', minZoneLevel: 6, world: 1 },
-  { name: 'Múmia Úr', icon: '🧟', level: 5, hp: 90, atk: 14, def: 12, spd: 5, xpReward: 85, goldReward: 35, locationType: 'dungeon', minZoneLevel: 4, world: 1 },
-  { name: 'Méregpók Anya', icon: '🕸️', level: 6, hp: 85, atk: 20, def: 6, spd: 12, xpReward: 100, goldReward: 40, locationType: 'dungeon', minZoneLevel: 5, world: 1 },
-  { name: 'Lich Király', icon: '👑', level: 8, hp: 200, atk: 22, def: 12, spd: 8, xpReward: 200, goldReward: 80, locationType: 'dungeon', minZoneLevel: 8, world: 1 },
-  { name: 'Démon Vezér', icon: '😈', level: 9, hp: 240, atk: 26, def: 14, spd: 10, xpReward: 250, goldReward: 100, locationType: 'dungeon', minZoneLevel: 8, world: 1 },
+  { name: 'Sötét Varázsló', icon: '🧙‍♂️', level: 4, hp: 70, atk: 16, def: 4, spd: 9, xpReward: 80, goldReward: 30, locationType: 'dungeon', minZoneLevel: 4, world: 1, abilities: [ENEMY_ABILITIES.dark_blast, ENEMY_ABILITIES.heal_self] },
+  { name: 'Kőgolem', icon: '🗿', level: 5, hp: 150, atk: 12, def: 18, spd: 3, xpReward: 90, goldReward: 25, locationType: 'dungeon', minZoneLevel: 4, world: 1, abilities: [ENEMY_ABILITIES.shield_up, ENEMY_ABILITIES.heavy_strike] },
+  { name: 'Vámpír Gróf', icon: '🧛', level: 6, hp: 100, atk: 18, def: 10, spd: 14, xpReward: 120, goldReward: 45, locationType: 'dungeon', minZoneLevel: 6, world: 1, abilities: [ENEMY_ABILITIES.vampiric_bite, ENEMY_ABILITIES.enrage] },
+  { name: 'Múmia Úr', icon: '🧟', level: 5, hp: 90, atk: 14, def: 12, spd: 5, xpReward: 85, goldReward: 35, locationType: 'dungeon', minZoneLevel: 4, world: 1, abilities: [ENEMY_ABILITIES.poison_spit, ENEMY_ABILITIES.heal_self] },
+  { name: 'Méregpók Anya', icon: '🕸️', level: 6, hp: 85, atk: 20, def: 6, spd: 12, xpReward: 100, goldReward: 40, locationType: 'dungeon', minZoneLevel: 5, world: 1, abilities: [ENEMY_ABILITIES.poison_spit, ENEMY_ABILITIES.enrage] },
+  { name: 'Lich Király', icon: '👑', level: 8, hp: 200, atk: 22, def: 12, spd: 8, xpReward: 200, goldReward: 80, locationType: 'dungeon', minZoneLevel: 8, world: 1, abilities: [ENEMY_ABILITIES.dark_blast, ENEMY_ABILITIES.heal_self, ENEMY_ABILITIES.boss_enrage] },
+  { name: 'Démon Vezér', icon: '😈', level: 9, hp: 240, atk: 26, def: 14, spd: 10, xpReward: 250, goldReward: 100, locationType: 'dungeon', minZoneLevel: 8, world: 1, abilities: [ENEMY_ABILITIES.fire_breath, ENEMY_ABILITIES.war_cry, ENEMY_ABILITIES.boss_enrage] },
   // World 1 - Raid
-  { name: 'Ősi Sárkány', icon: '🐉', level: 10, hp: 500, atk: 35, def: 20, spd: 12, xpReward: 500, goldReward: 200, locationType: 'raid', minZoneLevel: 8, world: 1 },
+  { name: 'Ősi Sárkány', icon: '🐉', level: 10, hp: 500, atk: 35, def: 20, spd: 12, xpReward: 500, goldReward: 200, locationType: 'raid', minZoneLevel: 8, world: 1, abilities: [ENEMY_ABILITIES.fire_breath, ENEMY_ABILITIES.war_cry, ENEMY_ABILITIES.shield_up, ENEMY_ABILITIES.boss_enrage] },
 
   // World 2 - Zone
-  { name: 'Démoni Skorpió', icon: '🦂', level: 6, hp: 90, atk: 18, def: 8, spd: 14, xpReward: 80, goldReward: 30, locationType: 'zone', minZoneLevel: 5, world: 2 },
-  { name: 'Jég Óriás', icon: '🧊', level: 8, hp: 180, atk: 22, def: 16, spd: 5, xpReward: 130, goldReward: 50, locationType: 'zone', minZoneLevel: 8, world: 2 },
-  { name: 'Lávakobold', icon: '👹', level: 7, hp: 100, atk: 24, def: 6, spd: 16, xpReward: 110, goldReward: 40, locationType: 'zone', minZoneLevel: 5, world: 2 },
-  { name: 'Pokol Kutya', icon: '🐕‍🦺', level: 6, hp: 75, atk: 20, def: 5, spd: 20, xpReward: 70, goldReward: 28, locationType: 'zone', minZoneLevel: 5, world: 2 },
-  { name: 'Kristály Golem', icon: '💎', level: 8, hp: 200, atk: 18, def: 22, spd: 4, xpReward: 140, goldReward: 55, locationType: 'zone', minZoneLevel: 7, world: 2 },
-  { name: 'Lidérc', icon: '🦇', level: 7, hp: 85, atk: 22, def: 4, spd: 22, xpReward: 95, goldReward: 35, locationType: 'zone', minZoneLevel: 6, world: 2 },
-  { name: 'Méregtoll Hárpia', icon: '🦅', level: 9, hp: 140, atk: 26, def: 10, spd: 19, xpReward: 160, goldReward: 60, locationType: 'zone', minZoneLevel: 8, world: 2 },
-  { name: 'Magma Óriás', icon: '🌋', level: 10, hp: 220, atk: 30, def: 18, spd: 6, xpReward: 200, goldReward: 80, locationType: 'zone', minZoneLevel: 9, world: 2 },
+  { name: 'Démoni Skorpió', icon: '🦂', level: 6, hp: 90, atk: 18, def: 8, spd: 14, xpReward: 80, goldReward: 30, locationType: 'zone', minZoneLevel: 5, world: 2, abilities: [ENEMY_ABILITIES.poison_spit, ENEMY_ABILITIES.enrage] },
+  { name: 'Jég Óriás', icon: '🧊', level: 8, hp: 180, atk: 22, def: 16, spd: 5, xpReward: 130, goldReward: 50, locationType: 'zone', minZoneLevel: 8, world: 2, abilities: [ENEMY_ABILITIES.ice_blast, ENEMY_ABILITIES.heavy_strike, ENEMY_ABILITIES.enrage] },
+  { name: 'Lávakobold', icon: '👹', level: 7, hp: 100, atk: 24, def: 6, spd: 16, xpReward: 110, goldReward: 40, locationType: 'zone', minZoneLevel: 5, world: 2, abilities: [ENEMY_ABILITIES.fire_breath] },
+  { name: 'Pokol Kutya', icon: '🐕‍🦺', level: 6, hp: 75, atk: 20, def: 5, spd: 20, xpReward: 70, goldReward: 28, locationType: 'zone', minZoneLevel: 5, world: 2, abilities: [ENEMY_ABILITIES.enrage, ENEMY_ABILITIES.heavy_strike] },
+  { name: 'Kristály Golem', icon: '💎', level: 8, hp: 200, atk: 18, def: 22, spd: 4, xpReward: 140, goldReward: 55, locationType: 'zone', minZoneLevel: 7, world: 2, abilities: [ENEMY_ABILITIES.shield_up, ENEMY_ABILITIES.heavy_strike] },
+  { name: 'Lidérc', icon: '🦇', level: 7, hp: 85, atk: 22, def: 4, spd: 22, xpReward: 95, goldReward: 35, locationType: 'zone', minZoneLevel: 6, world: 2, abilities: [ENEMY_ABILITIES.vampiric_bite, ENEMY_ABILITIES.dark_blast] },
+  { name: 'Méregtoll Hárpia', icon: '🦅', level: 9, hp: 140, atk: 26, def: 10, spd: 19, xpReward: 160, goldReward: 60, locationType: 'zone', minZoneLevel: 8, world: 2, abilities: [ENEMY_ABILITIES.poison_spit, ENEMY_ABILITIES.heavy_strike, ENEMY_ABILITIES.enrage] },
+  { name: 'Magma Óriás', icon: '🌋', level: 10, hp: 220, atk: 30, def: 18, spd: 6, xpReward: 200, goldReward: 80, locationType: 'zone', minZoneLevel: 9, world: 2, abilities: [ENEMY_ABILITIES.fire_breath, ENEMY_ABILITIES.war_cry, ENEMY_ABILITIES.enrage] },
   // World 2 - Dungeon
-  { name: 'Csontváz Mágus', icon: '☠️', level: 7, hp: 85, atk: 25, def: 5, spd: 12, xpReward: 100, goldReward: 40, locationType: 'dungeon', minZoneLevel: 5, world: 2 },
-  { name: 'Árnyék Démon', icon: '😈', level: 8, hp: 160, atk: 28, def: 12, spd: 15, xpReward: 150, goldReward: 60, locationType: 'dungeon', minZoneLevel: 6, world: 2 },
-  { name: 'Jég Sárkány', icon: '🐲', level: 9, hp: 250, atk: 30, def: 18, spd: 10, xpReward: 250, goldReward: 100, locationType: 'dungeon', minZoneLevel: 8, world: 2 },
-  { name: 'Elemi Titán', icon: '⚡', level: 10, hp: 300, atk: 35, def: 15, spd: 12, xpReward: 300, goldReward: 120, locationType: 'dungeon', minZoneLevel: 8, world: 2 },
-  { name: 'Véres Gladiátor', icon: '🗡️', level: 8, hp: 200, atk: 32, def: 14, spd: 18, xpReward: 200, goldReward: 80, locationType: 'dungeon', minZoneLevel: 5, world: 2 },
-  { name: 'Halál Angyala', icon: '👼', level: 10, hp: 280, atk: 33, def: 16, spd: 16, xpReward: 280, goldReward: 110, locationType: 'dungeon', minZoneLevel: 9, world: 2 },
-  { name: 'Csonttrón Őr', icon: '💀', level: 9, hp: 230, atk: 27, def: 20, spd: 8, xpReward: 220, goldReward: 90, locationType: 'dungeon', minZoneLevel: 7, world: 2 },
+  { name: 'Csontváz Mágus', icon: '☠️', level: 7, hp: 85, atk: 25, def: 5, spd: 12, xpReward: 100, goldReward: 40, locationType: 'dungeon', minZoneLevel: 5, world: 2, abilities: [ENEMY_ABILITIES.dark_blast, ENEMY_ABILITIES.heal_self] },
+  { name: 'Árnyék Démon', icon: '😈', level: 8, hp: 160, atk: 28, def: 12, spd: 15, xpReward: 150, goldReward: 60, locationType: 'dungeon', minZoneLevel: 6, world: 2, abilities: [ENEMY_ABILITIES.dark_blast, ENEMY_ABILITIES.heavy_strike, ENEMY_ABILITIES.enrage] },
+  { name: 'Jég Sárkány', icon: '🐲', level: 9, hp: 250, atk: 30, def: 18, spd: 10, xpReward: 250, goldReward: 100, locationType: 'dungeon', minZoneLevel: 8, world: 2, abilities: [ENEMY_ABILITIES.ice_blast, ENEMY_ABILITIES.fire_breath, ENEMY_ABILITIES.boss_enrage] },
+  { name: 'Elemi Titán', icon: '⚡', level: 10, hp: 300, atk: 35, def: 15, spd: 12, xpReward: 300, goldReward: 120, locationType: 'dungeon', minZoneLevel: 8, world: 2, abilities: [ENEMY_ABILITIES.fire_breath, ENEMY_ABILITIES.ice_blast, ENEMY_ABILITIES.war_cry, ENEMY_ABILITIES.boss_enrage] },
+  { name: 'Véres Gladiátor', icon: '🗡️', level: 8, hp: 200, atk: 32, def: 14, spd: 18, xpReward: 200, goldReward: 80, locationType: 'dungeon', minZoneLevel: 5, world: 2, abilities: [ENEMY_ABILITIES.heavy_strike, ENEMY_ABILITIES.war_cry, ENEMY_ABILITIES.enrage] },
+  { name: 'Halál Angyala', icon: '👼', level: 10, hp: 280, atk: 33, def: 16, spd: 16, xpReward: 280, goldReward: 110, locationType: 'dungeon', minZoneLevel: 9, world: 2, abilities: [ENEMY_ABILITIES.dark_blast, ENEMY_ABILITIES.heal_self, ENEMY_ABILITIES.boss_enrage] },
+  { name: 'Csonttrón Őr', icon: '💀', level: 9, hp: 230, atk: 27, def: 20, spd: 8, xpReward: 220, goldReward: 90, locationType: 'dungeon', minZoneLevel: 7, world: 2, abilities: [ENEMY_ABILITIES.shield_up, ENEMY_ABILITIES.heavy_strike, ENEMY_ABILITIES.enrage] },
   // World 2 - Raid
-  { name: 'Pokol Sárkány', icon: '🐲', level: 12, hp: 800, atk: 50, def: 25, spd: 14, xpReward: 800, goldReward: 350, locationType: 'raid', minZoneLevel: 10, world: 2 },
-  { name: 'Örök Démonlord', icon: '👿', level: 15, hp: 1200, atk: 60, def: 30, spd: 16, xpReward: 1200, goldReward: 500, locationType: 'raid', minZoneLevel: 12, world: 2 },
+  { name: 'Pokol Sárkány', icon: '🐲', level: 12, hp: 800, atk: 50, def: 25, spd: 14, xpReward: 800, goldReward: 350, locationType: 'raid', minZoneLevel: 10, world: 2, abilities: [ENEMY_ABILITIES.fire_breath, ENEMY_ABILITIES.war_cry, ENEMY_ABILITIES.shield_up, ENEMY_ABILITIES.boss_enrage] },
+  { name: 'Örök Démonlord', icon: '👿', level: 15, hp: 1200, atk: 60, def: 30, spd: 16, xpReward: 1200, goldReward: 500, locationType: 'raid', minZoneLevel: 12, world: 2, abilities: [ENEMY_ABILITIES.dark_blast, ENEMY_ABILITIES.fire_breath, ENEMY_ABILITIES.war_cry, ENEMY_ABILITIES.heal_self, ENEMY_ABILITIES.boss_enrage] },
 ];
 
 // ---- SET BONUSES ----
