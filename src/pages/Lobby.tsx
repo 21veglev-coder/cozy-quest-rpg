@@ -128,6 +128,7 @@ const Lobby = () => {
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {onlinePlayers.map(player => {
                 const cls = CLASSES.find(c => c.id === player.class);
+                const sub = SUBCLASSES.find(s => s.id === (player as any).subclass);
                 return (
                   <motion.div
                     key={player.id}
@@ -135,7 +136,7 @@ const Lobby = () => {
                     animate={{ opacity: 1, x: 0 }}
                     className="flex items-center gap-2 text-sm"
                   >
-                    <span className="text-base">{cls?.icon}</span>
+                    <span className="text-base">{sub?.icon || cls?.icon}</span>
                     <span className="text-foreground/80 truncate">{player.name}</span>
                     <span className="text-xs text-muted-foreground ml-auto">Lv.{player.level}</span>
                   </motion.div>
