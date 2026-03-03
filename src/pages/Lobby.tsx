@@ -9,6 +9,7 @@ import CharacterSheet from '@/components/CharacterSheet';
 import InventoryPanel from '@/components/InventoryPanel';
 import Tutorial from '@/components/Tutorial';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { LogOut, Users, BookOpen, Star } from 'lucide-react';
 
 const Lobby = () => {
@@ -66,7 +67,13 @@ const Lobby = () => {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
     
-    if (!item.equipped && item.type !== 'potion' && item.type !== 'quest') {
+    // Potions and quest items can't be equipped
+    if (item.type === 'potion' || item.type === 'quest') {
+      toast.info(`${item.name}: ${item.description}`);
+      return;
+    }
+    
+    if (!item.equipped) {
       // Unequip any item in the same slot first
       const sameSlot = items.find(i => i.equipped && i.type === item.type);
       if (sameSlot) {
