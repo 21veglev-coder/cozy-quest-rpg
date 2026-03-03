@@ -375,8 +375,11 @@ export const ENEMIES: EnemyDef[] = [
 
 // ---- SET BONUSES ----
 export const SET_BONUSES: Record<string, { pieces: number; bonus: string; effect: { atk?: number; def?: number; spd?: number; hp?: number; mp?: number; crit?: number } }> = {
-  'Árnyék': { pieces: 2, bonus: 'SPD +8, CRIT +8%', effect: { spd: 8, crit: 8 } },
-  'Tűz': { pieces: 2, bonus: 'ATK +10, MP +30', effect: { atk: 10, mp: 30 } },
+  // Class sets - World 1
+  'Bajnok': { pieces: 3, bonus: 'ATK +12, DEF +10, HP +40', effect: { atk: 12, def: 10, hp: 40 } },
+  'Árnyék': { pieces: 3, bonus: 'SPD +10, CRIT +10%, ATK +8', effect: { spd: 10, crit: 10, atk: 8 } },
+  'Tűz': { pieces: 3, bonus: 'ATK +12, MP +40, CRIT +5%', effect: { atk: 12, mp: 40, crit: 5 } },
+  // Generic sets
   'Szent': { pieces: 2, bonus: 'HP +50, DEF +5', effect: { hp: 50, def: 5 } },
   'Legenda': { pieces: 2, bonus: 'ATK +15, DEF +10, HP +50', effect: { atk: 15, def: 10, hp: 50 } },
   'Erőd': { pieces: 3, bonus: 'DEF +20, HP +80', effect: { def: 20, hp: 80 } },
