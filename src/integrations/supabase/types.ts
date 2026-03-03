@@ -136,6 +136,84 @@ export type Database = {
         }
         Relationships: []
       }
+      clan_members: {
+        Row: {
+          character_id: string
+          clan_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          character_id: string
+          clan_id: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          character_id?: string
+          clan_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clan_members_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clan_members_clan_id_fkey"
+            columns: ["clan_id"]
+            isOneToOne: false
+            referencedRelation: "clans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clans: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string
+          id: string
+          leader_id: string
+          level: number
+          max_members: number
+          name: string
+          xp: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          leader_id: string
+          level?: number
+          max_members?: number
+          name: string
+          xp?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          leader_id?: string
+          level?: number
+          max_members?: number
+          name?: string
+          xp?: number
+        }
+        Relationships: []
+      }
       combat_log: {
         Row: {
           character_id: string
@@ -320,6 +398,7 @@ export type Database = {
           level_req: number
           name: string
           type: string
+          world: number
         }
         Insert: {
           connected_to?: string[] | null
@@ -331,6 +410,7 @@ export type Database = {
           level_req?: number
           name: string
           type?: string
+          world?: number
         }
         Update: {
           connected_to?: string[] | null
@@ -342,6 +422,7 @@ export type Database = {
           level_req?: number
           name?: string
           type?: string
+          world?: number
         }
         Relationships: []
       }
@@ -362,7 +443,9 @@ export type Database = {
           rarity: string
           set_name: string | null
           spd: number
+          subclass_req: string | null
           type: string
+          world: number
         }
         Insert: {
           atk?: number
@@ -380,7 +463,9 @@ export type Database = {
           rarity?: string
           set_name?: string | null
           spd?: number
+          subclass_req?: string | null
           type: string
+          world?: number
         }
         Update: {
           atk?: number
@@ -398,9 +483,91 @@ export type Database = {
           rarity?: string
           set_name?: string | null
           spd?: number
+          subclass_req?: string | null
           type?: string
+          world?: number
         }
         Relationships: []
+      }
+      team_members: {
+        Row: {
+          character_id: string
+          id: string
+          joined_at: string
+          ready: boolean
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          character_id: string
+          id?: string
+          joined_at?: string
+          ready?: boolean
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          character_id?: string
+          id?: string
+          joined_at?: string
+          ready?: boolean
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          id: string
+          leader_id: string
+          max_size: number
+          name: string
+          status: string
+          target_location_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          leader_id: string
+          max_size?: number
+          name: string
+          status?: string
+          target_location_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          leader_id?: string
+          max_size?: number
+          name?: string
+          status?: string
+          target_location_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_target_location_id_fkey"
+            columns: ["target_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
