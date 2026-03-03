@@ -360,6 +360,152 @@ export const RARITY_COLORS: Record<string, string> = {
   legendary: 'text-gold',
 };
 
+// ---- ACTIVE SKILLS ----
+export interface SkillDef {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  mpCost: number;
+  cooldown: number; // turns
+  classReq: CharacterClass;
+  subclassReq: Subclass | null;
+  effect: (charAtk: number, charDef: number) => { damage?: number; heal?: number; selfBuff?: { atk?: number; def?: number; spd?: number; crit?: number; turns: number }; debuff?: { atk?: number; def?: number; turns: number } };
+}
+
+export const SKILLS: SkillDef[] = [
+  // Warrior base
+  { id: 'power_strike', name: 'Erős Csapás', icon: '💥', description: '150% ATK sebzés', mpCost: 8, cooldown: 2, classReq: 'warrior', subclassReq: null,
+    effect: (atk) => ({ damage: Math.floor(atk * 1.5) }) },
+  { id: 'war_shout', name: 'Harci Kiáltás', icon: '📣', description: '+5 ATK 3 körre', mpCost: 10, cooldown: 4, classReq: 'warrior', subclassReq: null,
+    effect: () => ({ selfBuff: { atk: 5, turns: 3 } }) },
+  { id: 'shield_bash', name: 'Pajzs Ütés', icon: '🛡️', description: '80% ATK + ellenség -3 ATK', mpCost: 12, cooldown: 3, classReq: 'warrior', subclassReq: null,
+    effect: (atk) => ({ damage: Math.floor(atk * 0.8), debuff: { atk: -3, def: 0, turns: 2 } }) },
+  // Tank
+  { id: 'fortress_stance', name: 'Erőd Állás', icon: '🏰', description: '+10 DEF 3 körre', mpCost: 15, cooldown: 5, classReq: 'warrior', subclassReq: 'tank',
+    effect: () => ({ selfBuff: { def: 10, turns: 3 } }) },
+  { id: 'taunt_slam', name: 'Tauntolás', icon: '🗣️', description: '120% ATK + ellenség -5 ATK', mpCost: 18, cooldown: 4, classReq: 'warrior', subclassReq: 'tank',
+    effect: (atk) => ({ damage: Math.floor(atk * 1.2), debuff: { atk: -5, def: 0, turns: 3 } }) },
+  // Berserker
+  { id: 'rampage', name: 'Tombolo', icon: '🪓', description: '200% ATK sebzés', mpCost: 20, cooldown: 4, classReq: 'warrior', subclassReq: 'berserker',
+    effect: (atk) => ({ damage: Math.floor(atk * 2.0) }) },
+  { id: 'blood_fury', name: 'Vér Düh', icon: '🩸', description: '+8 ATK, +10% CRIT 3 körre', mpCost: 15, cooldown: 5, classReq: 'warrior', subclassReq: 'berserker',
+    effect: () => ({ selfBuff: { atk: 8, crit: 10, turns: 3 } }) },
+  // Samurai
+  { id: 'iaido', name: 'Iaido', icon: '⛩️', description: '180% ATK, +15% CRIT esély', mpCost: 18, cooldown: 3, classReq: 'warrior', subclassReq: 'samurai',
+    effect: (atk) => ({ damage: Math.floor(atk * 1.8) }) },
+  // Javliner
+  { id: 'javelin_throw', name: 'Dárda Dobás', icon: '🔱', description: '170% ATK távolsági', mpCost: 14, cooldown: 3, classReq: 'warrior', subclassReq: 'javliner',
+    effect: (atk) => ({ damage: Math.floor(atk * 1.7) }) },
+
+  // Mage base
+  { id: 'fireball', name: 'Tűzgolyó', icon: '🔥', description: '160% ATK mágikus sebzés', mpCost: 12, cooldown: 2, classReq: 'mage', subclassReq: null,
+    effect: (atk) => ({ damage: Math.floor(atk * 1.6) }) },
+  { id: 'mana_shield', name: 'Mana Pajzs', icon: '🛡️', description: '+8 DEF 3 körre', mpCost: 15, cooldown: 4, classReq: 'mage', subclassReq: null,
+    effect: () => ({ selfBuff: { def: 8, turns: 3 } }) },
+  { id: 'arcane_bolt', name: 'Arkán Lövedék', icon: '✨', description: '130% ATK', mpCost: 8, cooldown: 1, classReq: 'mage', subclassReq: null,
+    effect: (atk) => ({ damage: Math.floor(atk * 1.3) }) },
+  // Healer
+  { id: 'holy_heal', name: 'Szent Gyógyítás', icon: '💚', description: 'Gyógyít 50 HP-t', mpCost: 20, cooldown: 3, classReq: 'mage', subclassReq: 'healer',
+    effect: () => ({ heal: 50 }) },
+  { id: 'divine_shield', name: 'Isteni Pajzs', icon: '👼', description: '+12 DEF 3 körre', mpCost: 25, cooldown: 5, classReq: 'mage', subclassReq: 'healer',
+    effect: () => ({ selfBuff: { def: 12, turns: 3 } }) },
+  // Necromancer
+  { id: 'death_bolt', name: 'Halál Sugár', icon: '☠️', description: '190% ATK sötét sebzés', mpCost: 18, cooldown: 3, classReq: 'mage', subclassReq: 'necromancer',
+    effect: (atk) => ({ damage: Math.floor(atk * 1.9) }) },
+  { id: 'life_drain', name: 'Élet Szívás', icon: '👻', description: '100% ATK seb + gyógyít felét', mpCost: 22, cooldown: 4, classReq: 'mage', subclassReq: 'necromancer',
+    effect: (atk) => ({ damage: Math.floor(atk * 1.0), heal: Math.floor(atk * 0.5) }) },
+  // Arcanist
+  { id: 'arcane_blast', name: 'Arkán Robbanás', icon: '💥', description: '220% ATK', mpCost: 25, cooldown: 4, classReq: 'mage', subclassReq: 'arcanist',
+    effect: (atk) => ({ damage: Math.floor(atk * 2.2) }) },
+  // Elementalist
+  { id: 'chain_lightning', name: 'Lánc Villám', icon: '⚡', description: '180% ATK villám', mpCost: 20, cooldown: 3, classReq: 'mage', subclassReq: 'elementalist',
+    effect: (atk) => ({ damage: Math.floor(atk * 1.8) }) },
+  { id: 'frost_nova', name: 'Fagy Nova', icon: '❄️', description: '120% ATK + ellenség -4 SPD', mpCost: 18, cooldown: 4, classReq: 'mage', subclassReq: 'elementalist',
+    effect: (atk) => ({ damage: Math.floor(atk * 1.2), debuff: { atk: 0, def: -4, turns: 2 } }) },
+
+  // Rogue base
+  { id: 'quick_slash', name: 'Gyors Vágás', icon: '⚡', description: '140% ATK gyors csapás', mpCost: 8, cooldown: 1, classReq: 'rogue', subclassReq: null,
+    effect: (atk) => ({ damage: Math.floor(atk * 1.4) }) },
+  { id: 'smoke_bomb', name: 'Füstbomba', icon: '💨', description: '+6 SPD, +5% CRIT 3 körre', mpCost: 12, cooldown: 4, classReq: 'rogue', subclassReq: null,
+    effect: () => ({ selfBuff: { spd: 6, crit: 5, turns: 3 } }) },
+  { id: 'cheap_shot', name: 'Aljas Ütés', icon: '👊', description: '100% ATK + ellenség -3 DEF', mpCost: 10, cooldown: 3, classReq: 'rogue', subclassReq: null,
+    effect: (atk) => ({ damage: Math.floor(atk * 1.0), debuff: { atk: 0, def: -3, turns: 2 } }) },
+  // Assassin
+  { id: 'assassination', name: 'Merénylet', icon: '🔪', description: '250% ATK (magas CRIT)', mpCost: 25, cooldown: 5, classReq: 'rogue', subclassReq: 'assassin',
+    effect: (atk) => ({ damage: Math.floor(atk * 2.5) }) },
+  { id: 'vanish', name: 'Eltűnés', icon: '🌑', description: '+15% CRIT 3 körre', mpCost: 15, cooldown: 4, classReq: 'rogue', subclassReq: 'assassin',
+    effect: () => ({ selfBuff: { crit: 15, turns: 3 } }) },
+  // Archer
+  { id: 'multi_shot', name: 'Többes Lövés', icon: '🏹', description: '180% ATK', mpCost: 16, cooldown: 3, classReq: 'rogue', subclassReq: 'archer',
+    effect: (atk) => ({ damage: Math.floor(atk * 1.8) }) },
+  { id: 'snipe', name: 'Mesterlövés', icon: '🎯', description: '200% ATK precíz lövés', mpCost: 20, cooldown: 4, classReq: 'rogue', subclassReq: 'archer',
+    effect: (atk) => ({ damage: Math.floor(atk * 2.0) }) },
+  // Hunter
+  { id: 'trap', name: 'Csapda', icon: '🪤', description: 'Ellenség -5 SPD, -3 ATK', mpCost: 14, cooldown: 3, classReq: 'rogue', subclassReq: 'hunter',
+    effect: () => ({ debuff: { atk: -3, def: -5, turns: 3 } }) },
+  { id: 'beast_strike', name: 'Bestia Csapás', icon: '🐾', description: '170% ATK', mpCost: 16, cooldown: 3, classReq: 'rogue', subclassReq: 'hunter',
+    effect: (atk) => ({ damage: Math.floor(atk * 1.7) }) },
+  // Shadowblade
+  { id: 'shadow_strike', name: 'Árnyék Csapás', icon: '🌑', description: '190% ATK méreg', mpCost: 18, cooldown: 3, classReq: 'rogue', subclassReq: 'shadowblade',
+    effect: (atk) => ({ damage: Math.floor(atk * 1.9) }) },
+  { id: 'poison_cloud', name: 'Méregfelhő', icon: '☁️', description: 'Ellenség -4 ATK, -3 DEF', mpCost: 20, cooldown: 4, classReq: 'rogue', subclassReq: 'shadowblade',
+    effect: () => ({ debuff: { atk: -4, def: -3, turns: 3 } }) },
+];
+
+// ---- LOOT TABLES ----
+export interface LootDrop {
+  name: string;
+  type: ItemSlot;
+  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  icon: string;
+  description: string;
+  atk: number;
+  def: number;
+  spd: number;
+  hp_bonus: number;
+  mp_bonus: number;
+  crit_chance: number;
+  set_name: string | null;
+  dropChance: number; // 0-100
+  minEnemyLevel: number;
+}
+
+export const LOOT_TABLE: LootDrop[] = [
+  // Common drops
+  { name: 'Goblin Tőr', type: 'weapon', rarity: 'common', icon: '🔪', description: 'Goblinok fegyvere.', atk: 4, def: 0, spd: 1, hp_bonus: 0, mp_bonus: 0, crit_chance: 2, set_name: null, dropChance: 30, minEnemyLevel: 1 },
+  { name: 'Farkas Bőr Sapka', type: 'helmet', rarity: 'common', icon: '🐺', description: 'Farkas bundából.', atk: 0, def: 3, spd: 1, hp_bonus: 5, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 25, minEnemyLevel: 2 },
+  { name: 'Pók Selyem Kesztyű', type: 'gloves', rarity: 'uncommon', icon: '🕸️', description: 'Ragacsos de erős.', atk: 2, def: 2, spd: 2, hp_bonus: 0, mp_bonus: 0, crit_chance: 3, set_name: null, dropChance: 20, minEnemyLevel: 3 },
+  { name: 'Csont Gyűrű', type: 'ring', rarity: 'uncommon', icon: '💀', description: 'Csontból faragva.', atk: 3, def: 1, spd: 0, hp_bonus: 5, mp_bonus: 5, crit_chance: 2, set_name: null, dropChance: 15, minEnemyLevel: 5 },
+  // Rare drops
+  { name: 'Tűz Kard', type: 'weapon', rarity: 'rare', icon: '🔥', description: 'Lángoló penge.', atk: 12, def: 0, spd: 2, hp_bonus: 0, mp_bonus: 0, crit_chance: 5, set_name: 'Tűz', dropChance: 12, minEnemyLevel: 7 },
+  { name: 'Tűz Vállvédő', type: 'shoulders', rarity: 'rare', icon: '🔥', description: 'Forró vállvédő.', atk: 3, def: 5, spd: 0, hp_bonus: 10, mp_bonus: 5, crit_chance: 0, set_name: 'Tűz', dropChance: 10, minEnemyLevel: 7 },
+  { name: 'Vámpír Köpeny', type: 'chest', rarity: 'rare', icon: '🧛', description: 'Életerő szívás.', atk: 5, def: 7, spd: 3, hp_bonus: 20, mp_bonus: 0, crit_chance: 3, set_name: null, dropChance: 10, minEnemyLevel: 6 },
+  { name: 'Kő Csizma', type: 'boots', rarity: 'rare', icon: '🗿', description: 'Nehéz de erős.', atk: 0, def: 10, spd: -2, hp_bonus: 15, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 10, minEnemyLevel: 5 },
+  // Epic drops
+  { name: 'Sárkány Kard', type: 'weapon', rarity: 'epic', icon: '🐉', description: 'Sárkány fogából.', atk: 20, def: 3, spd: 3, hp_bonus: 10, mp_bonus: 0, crit_chance: 8, set_name: 'Legenda', dropChance: 8, minEnemyLevel: 8 },
+  { name: 'Sárkány Sisak', type: 'helmet', rarity: 'epic', icon: '🐉', description: 'Sárkány pikkelyből.', atk: 5, def: 12, spd: 0, hp_bonus: 30, mp_bonus: 0, crit_chance: 3, set_name: 'Legenda', dropChance: 6, minEnemyLevel: 8 },
+  { name: 'Lich Nyaklánc', type: 'necklace', rarity: 'epic', icon: '👑', description: 'Sötét mágia.', atk: 10, def: 0, spd: 2, hp_bonus: 0, mp_bonus: 30, crit_chance: 5, set_name: null, dropChance: 7, minEnemyLevel: 8 },
+  // W2 drops
+  { name: 'Démoni Karmok', type: 'gloves', rarity: 'epic', icon: '😈', description: 'Démoni erő.', atk: 8, def: 3, spd: 4, hp_bonus: 0, mp_bonus: 0, crit_chance: 8, set_name: null, dropChance: 10, minEnemyLevel: 8 },
+  { name: 'Jég Korona', type: 'helmet', rarity: 'epic', icon: '🧊', description: 'Fagyos fejfedő.', atk: 4, def: 10, spd: 0, hp_bonus: 20, mp_bonus: 20, crit_chance: 2, set_name: null, dropChance: 8, minEnemyLevel: 8 },
+  { name: 'Pokol Nadrág', type: 'legs', rarity: 'epic', icon: '🔥', description: 'Pokoli védelem.', atk: 3, def: 12, spd: 2, hp_bonus: 25, mp_bonus: 0, crit_chance: 3, set_name: null, dropChance: 8, minEnemyLevel: 10 },
+  // Legendary (raid only)
+  { name: 'Örök Lángoló Kard', type: 'weapon', rarity: 'legendary', icon: '⚔️', description: 'Legendás fegyver.', atk: 30, def: 5, spd: 5, hp_bonus: 20, mp_bonus: 10, crit_chance: 12, set_name: 'Legenda', dropChance: 5, minEnemyLevel: 10 },
+  { name: 'Sárkányölő Páncél', type: 'chest', rarity: 'legendary', icon: '🐲', description: 'A legerősebb vért.', atk: 10, def: 25, spd: 0, hp_bonus: 60, mp_bonus: 0, crit_chance: 5, set_name: 'Legenda', dropChance: 4, minEnemyLevel: 10 },
+];
+
+export function rollLoot(enemyLevel: number, locationType: 'zone' | 'dungeon' | 'raid'): LootDrop | null {
+  const eligible = LOOT_TABLE.filter(l => enemyLevel >= l.minEnemyLevel);
+  if (eligible.length === 0) return null;
+  // Higher drop chance in dungeons/raids
+  const mult = locationType === 'raid' ? 2.0 : locationType === 'dungeon' ? 1.5 : 1.0;
+  for (const loot of eligible.sort((a, b) => a.dropChance - b.dropChance)) {
+    if (Math.random() * 100 < loot.dropChance * mult) return loot;
+  }
+  return null;
+}
+
 export const STARTER_ITEMS: Record<CharacterClass, Omit<InventoryItem, 'id' | 'character_id'>[]> = {
   warrior: [
     { name: 'Rozsdás Kard', type: 'weapon', rarity: 'common', icon: '🗡️', description: 'Egy régi, de megbízható kard.', equipped: true, atk: 3, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 1, socket_gems: [], set_name: null, sell_price: 5 },
