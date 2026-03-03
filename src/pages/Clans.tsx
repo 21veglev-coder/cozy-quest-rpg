@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
-import { Clan, ClanMember, GameCharacter, CLASSES, SUBCLASSES } from '@/types/game';
+import { Clan, ClanMember, GameCharacter, Invite, CLASSES, SUBCLASSES } from '@/types/game';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users, Crown, Shield, Plus, LogOut } from 'lucide-react';
+import { ArrowLeft, Users, Crown, Shield, Plus, LogOut, UserPlus, Search, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Clans = () => {
@@ -20,28 +20,52 @@ const Clans = () => {
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newIcon, setNewIcon] = useState('⚔️');
+  // Invite state
+  const [inviting, setInviting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<GameCharacter[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<(Invite & { clanName?: string; fromName?: string })[]>([]);
+  const [showInvites, setShowInvites] = useState(false);
 
   useEffect(() => {
     if (!user) { navigate('/auth'); return; }
     loadData();
+    loadMyInvites();
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase.channel('clan-invites-' + user.id)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'invites', filter: `to_user_id=eq.${user.id}` }, () => {
+        loadMyInvites();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id]);
+
+  const loadMyInvites = async () => {
+    if (!user) return;
+    const res = await supabase.from('invites').select('*').eq('to_user_id', user.id).eq('type', 'clan').eq('status', 'pending');
+    if (!res.data) return;
+    const enriched = await Promise.all(res.data.map(async (inv: any) => {
+      const clanRes = await supabase.from('clans').select('name').eq('id', inv.target_id).single();
+      const charRes = await supabase.from('characters').select('name').eq('user_id', inv.from_user_id).single();
+      return { ...inv, clanName: clanRes.data?.name, fromName: charRes.data?.name };
+    }));
+    setPendingInvites(enriched);
+  };
 
   const loadData = async () => {
     const charRes = await supabase.from('characters').select('*').eq('user_id', user!.id).single();
     if (!charRes.data) return;
     setCharacter(charRes.data as unknown as GameCharacter);
 
-    // Check membership
     const memRes = await supabase.from('clan_members').select('*').eq('user_id', user!.id).single();
     if (memRes.data) {
       setMyMembership(memRes.data as ClanMember);
       const clanRes = await supabase.from('clans').select('*').eq('id', memRes.data.clan_id).single();
-      if (clanRes.data) {
-        setMyClan(clanRes.data as Clan);
-        loadMembers(memRes.data.clan_id);
-      }
+      if (clanRes.data) { setMyClan(clanRes.data as Clan); loadMembers(memRes.data.clan_id); }
     } else {
-      // Load all clans for browsing
       const allClans = await supabase.from('clans').select('*').order('level', { ascending: false });
       if (allClans.data) setClans(allClans.data as Clan[]);
     }
@@ -50,7 +74,6 @@ const Clans = () => {
   const loadMembers = async (clanId: string) => {
     const memRes = await supabase.from('clan_members').select('*').eq('clan_id', clanId);
     if (!memRes.data) return;
-    // Fetch character info for each member
     const charIds = memRes.data.map(m => m.character_id);
     const charsRes = await supabase.from('characters').select('id, name, class, level, subclass').in('id', charIds);
     const charMap = new Map((charsRes.data || []).map(c => [c.id, c]));
@@ -63,51 +86,65 @@ const Clans = () => {
   const createClan = async () => {
     if (!character || !newName.trim()) return;
     const { data, error } = await supabase.from('clans').insert({
-      name: newName.trim(),
-      icon: newIcon,
-      description: newDesc.trim() || null,
-      leader_id: user!.id,
+      name: newName.trim(), icon: newIcon, description: newDesc.trim() || null, leader_id: user!.id,
     }).select().single();
     if (error) { toast.error(error.message.includes('unique') ? 'Ez a klán név már foglalt!' : error.message); return; }
-    // Auto-join as leader
-    await supabase.from('clan_members').insert({
-      clan_id: data.id,
-      user_id: user!.id,
-      character_id: character.id,
-      role: 'leader',
-    });
+    await supabase.from('clan_members').insert({ clan_id: data.id, user_id: user!.id, character_id: character.id, role: 'leader' });
     toast.success(`${newName} klán létrehozva!`);
-    setCreating(false);
-    loadData();
+    setCreating(false); loadData();
   };
 
   const joinClan = async (clanId: string) => {
     if (!character) return;
-    const { error } = await supabase.from('clan_members').insert({
-      clan_id: clanId,
-      user_id: user!.id,
-      character_id: character.id,
-      role: 'member',
-    });
+    const { error } = await supabase.from('clan_members').insert({ clan_id: clanId, user_id: user!.id, character_id: character.id, role: 'member' });
     if (error) { toast.error('Nem sikerült csatlakozni!'); return; }
-    toast.success('Csatlakoztál a klánhoz!');
-    loadData();
+    toast.success('Csatlakoztál a klánhoz!'); loadData();
   };
 
   const leaveClan = async () => {
     if (!myMembership) return;
     if (myMembership.role === 'leader') {
-      // Delete clan if leader leaves
       await supabase.from('clans').delete().eq('id', myMembership.clan_id);
       toast.success('Klán feloszlatva.');
     } else {
       await supabase.from('clan_members').delete().eq('id', myMembership.id);
       toast.success('Kiléptél a klánból.');
     }
-    setMyClan(null);
-    setMyMembership(null);
-    setMembers([]);
+    setMyClan(null); setMyMembership(null); setMembers([]); loadData();
+  };
+
+  // Invite functions
+  const searchPlayers = async () => {
+    if (!searchQuery.trim()) return;
+    const res = await supabase.from('characters').select('*').ilike('name', `%${searchQuery.trim()}%`).neq('user_id', user!.id).limit(10);
+    if (res.data) {
+      const memberUserIds = new Set(members.map(m => m.user_id));
+      setSearchResults((res.data as unknown as GameCharacter[]).filter(c => !memberUserIds.has(c.user_id)));
+    }
+  };
+
+  const invitePlayer = async (targetChar: GameCharacter) => {
+    if (!myClan) return;
+    const existing = await supabase.from('invites').select('id').eq('type', 'clan').eq('target_id', myClan.id).eq('to_user_id', targetChar.user_id).eq('status', 'pending');
+    if (existing.data && existing.data.length > 0) { toast.error('Már meghívtad!'); return; }
+    await supabase.from('invites').insert({ type: 'clan', target_id: myClan.id, from_user_id: user!.id, to_user_id: targetChar.user_id });
+    toast.success(`${targetChar.name} meghívva!`);
+    setSearchResults(prev => prev.filter(c => c.id !== targetChar.id));
+  };
+
+  const acceptInvite = async (invite: Invite) => {
+    if (!character) return;
+    await supabase.from('invites').update({ status: 'accepted' }).eq('id', invite.id);
+    await supabase.from('clan_members').insert({ clan_id: invite.target_id, user_id: user!.id, character_id: character.id, role: 'member' });
+    toast.success('Csatlakozás sikeres!');
+    setPendingInvites(prev => prev.filter(i => i.id !== invite.id));
     loadData();
+  };
+
+  const declineInvite = async (invite: Invite) => {
+    await supabase.from('invites').update({ status: 'declined' }).eq('id', invite.id);
+    setPendingInvites(prev => prev.filter(i => i.id !== invite.id));
+    toast.success('Meghívás elutasítva.');
   };
 
   const ICONS = ['⚔️', '🛡️', '🔮', '🗡️', '🐉', '🦅', '🔥', '💀', '👑', '🌟', '🏴', '⚡'];
@@ -121,11 +158,40 @@ const Clans = () => {
         <h1 className="font-display text-lg text-gold text-glow-gold">
           <Users className="w-5 h-5 inline mr-1" />Klánok
         </h1>
+        <div className="ml-auto relative">
+          <Button variant="ghost" size="sm" onClick={() => setShowInvites(!showInvites)} className="relative">
+            <Bell className="w-4 h-4" />
+            {pendingInvites.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground rounded-full text-[10px] flex items-center justify-center">
+                {pendingInvites.length}
+              </span>
+            )}
+          </Button>
+        </div>
       </header>
+
+      {/* Pending Invites */}
+      <AnimatePresence>
+        {showInvites && pendingInvites.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            className="mx-4 mt-2 rpg-panel-gold p-4 space-y-2">
+            <h3 className="font-display text-sm text-gold">📨 Klán Meghívások</h3>
+            {pendingInvites.map(inv => (
+              <div key={inv.id} className="rpg-panel p-3 flex items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="font-display text-sm truncate">{inv.clanName || 'Klán'}</p>
+                  <p className="text-[10px] text-muted-foreground">Meghívó: {inv.fromName || '...'}</p>
+                </div>
+                <Button size="sm" className="font-display text-xs" onClick={() => acceptInvite(inv)}>✅</Button>
+                <Button size="sm" variant="outline" className="font-display text-xs" onClick={() => declineInvite(inv)}>❌</Button>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="flex-1 p-4 max-w-3xl mx-auto w-full">
         {myClan ? (
-          /* My Clan View */
           <div className="space-y-4">
             <div className="rpg-panel-gold p-6 text-center">
               <div className="text-4xl mb-2">{myClan.icon}</div>
@@ -137,7 +203,6 @@ const Clans = () => {
               </div>
             </div>
 
-            {/* Members */}
             <div className="rpg-panel p-4">
               <h3 className="font-display text-sm text-gold mb-3">Tagok</h3>
               <div className="space-y-2">
@@ -163,13 +228,52 @@ const Clans = () => {
               </div>
             </div>
 
+            {/* Invite Section (leader/officer) */}
+            {(myMembership?.role === 'leader' || myMembership?.role === 'officer') && (
+              <div className="rpg-panel p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-display text-sm text-gold">👥 Meghívás</h3>
+                  <Button size="sm" variant="outline" className="font-display text-xs" onClick={() => setInviting(!inviting)}>
+                    <UserPlus className="w-3 h-3 mr-1" /> Meghívás
+                  </Button>
+                </div>
+                {inviting && (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <input className="flex-1 bg-secondary border border-border rounded px-3 py-2 text-sm font-display text-foreground"
+                        placeholder="Karakter neve..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && searchPlayers()} />
+                      <Button size="sm" onClick={searchPlayers}><Search className="w-4 h-4" /></Button>
+                    </div>
+                    {searchResults.map(c => {
+                      const cls = CLASSES.find(cl => cl.id === c.class);
+                      return (
+                        <div key={c.id} className="rpg-panel p-2 flex items-center gap-3">
+                          <span>{cls?.icon || '👤'}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-display text-sm truncate">{c.name}</p>
+                            <p className="text-[10px] text-muted-foreground">Lv.{c.level} {cls?.name}</p>
+                          </div>
+                          <Button size="sm" className="font-display text-xs" onClick={() => invitePlayer(c)}>
+                            <UserPlus className="w-3 h-3 mr-1" /> Meghív
+                          </Button>
+                        </div>
+                      );
+                    })}
+                    {searchResults.length === 0 && searchQuery && (
+                      <p className="text-xs text-muted-foreground text-center">Keress karakter névre!</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             <Button variant="outline" className="w-full font-display text-destructive" onClick={leaveClan}>
               <LogOut className="w-4 h-4 mr-1" />
               {myMembership?.role === 'leader' ? 'Klán Feloszlatása' : 'Kilépés a Klánból'}
             </Button>
           </div>
         ) : (
-          /* Browse / Create Clans */
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="font-display text-lg text-gold">Elérhető Klánok</h2>
@@ -198,7 +302,6 @@ const Clans = () => {
               </motion.div>
             ))}
 
-            {/* Create Clan Dialog */}
             <AnimatePresence>
               {creating && (
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}

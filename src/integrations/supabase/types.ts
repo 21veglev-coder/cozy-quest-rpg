@@ -387,6 +387,36 @@ export type Database = {
           },
         ]
       }
+      invites: {
+        Row: {
+          created_at: string
+          from_user_id: string
+          id: string
+          status: string
+          target_id: string
+          to_user_id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          from_user_id: string
+          id?: string
+          status?: string
+          target_id: string
+          to_user_id: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          from_user_id?: string
+          id?: string
+          status?: string
+          target_id?: string
+          to_user_id?: string
+          type?: string
+        }
+        Relationships: []
+      }
       locations: {
         Row: {
           connected_to: string[] | null
