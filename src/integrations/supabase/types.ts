@@ -14,10 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      character_perks: {
+        Row: {
+          character_id: string
+          created_at: string
+          id: string
+          perk_id: string
+          tier: number
+        }
+        Insert: {
+          character_id: string
+          created_at?: string
+          id?: string
+          perk_id: string
+          tier?: number
+        }
+        Update: {
+          character_id?: string
+          created_at?: string
+          id?: string
+          perk_id?: string
+          tier?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "character_perks_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       characters: {
         Row: {
+          atk: number
           class: string
           created_at: string
+          crit_chance: number
+          def: number
           gold: number
           hp: number
           id: string
@@ -26,12 +61,17 @@ export type Database = {
           max_mp: number
           mp: number
           name: string
+          perk_points: number
+          spd: number
           user_id: string
           xp: number
         }
         Insert: {
+          atk?: number
           class: string
           created_at?: string
+          crit_chance?: number
+          def?: number
           gold?: number
           hp: number
           id?: string
@@ -40,12 +80,17 @@ export type Database = {
           max_mp: number
           mp: number
           name: string
+          perk_points?: number
+          spd?: number
           user_id: string
           xp?: number
         }
         Update: {
+          atk?: number
           class?: string
           created_at?: string
+          crit_chance?: number
+          def?: number
           gold?: number
           hp?: number
           id?: string
@@ -54,6 +99,8 @@ export type Database = {
           max_mp?: number
           mp?: number
           name?: string
+          perk_points?: number
+          spd?: number
           user_id?: string
           xp?: number
         }
@@ -83,38 +130,167 @@ export type Database = {
         }
         Relationships: []
       }
-      inventory_items: {
+      combat_log: {
         Row: {
           character_id: string
+          combat_data: Json | null
           created_at: string
-          description: string | null
-          equipped: boolean
-          icon: string
+          enemy_level: number
+          enemy_name: string
+          gold_gained: number
           id: string
-          name: string
-          rarity: string
-          type: string
+          location_id: string | null
+          loot_item_id: string | null
+          result: string
+          xp_gained: number
         }
         Insert: {
           character_id: string
+          combat_data?: Json | null
           created_at?: string
-          description?: string | null
-          equipped?: boolean
-          icon?: string
+          enemy_level?: number
+          enemy_name: string
+          gold_gained?: number
           id?: string
-          name: string
-          rarity?: string
-          type: string
+          location_id?: string | null
+          loot_item_id?: string | null
+          result: string
+          xp_gained?: number
         }
         Update: {
           character_id?: string
+          combat_data?: Json | null
           created_at?: string
+          enemy_level?: number
+          enemy_name?: string
+          gold_gained?: number
+          id?: string
+          location_id?: string | null
+          loot_item_id?: string | null
+          result?: string
+          xp_gained?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "combat_log_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combat_log_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dungeon_progress: {
+        Row: {
+          character_id: string
+          completed: boolean
+          created_at: string
+          current_floor: number
+          id: string
+          location_id: string
+          max_floor: number
+        }
+        Insert: {
+          character_id: string
+          completed?: boolean
+          created_at?: string
+          current_floor?: number
+          id?: string
+          location_id: string
+          max_floor?: number
+        }
+        Update: {
+          character_id?: string
+          completed?: boolean
+          created_at?: string
+          current_floor?: number
+          id?: string
+          location_id?: string
+          max_floor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dungeon_progress_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dungeon_progress_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_items: {
+        Row: {
+          atk: number
+          character_id: string
+          created_at: string
+          crit_chance: number
+          def: number
+          description: string | null
+          equipped: boolean
+          hp_bonus: number
+          icon: string
+          id: string
+          mp_bonus: number
+          name: string
+          rarity: string
+          sell_price: number
+          set_name: string | null
+          socket_gems: string[] | null
+          spd: number
+          type: string
+        }
+        Insert: {
+          atk?: number
+          character_id: string
+          created_at?: string
+          crit_chance?: number
+          def?: number
           description?: string | null
           equipped?: boolean
+          hp_bonus?: number
           icon?: string
           id?: string
+          mp_bonus?: number
+          name: string
+          rarity?: string
+          sell_price?: number
+          set_name?: string | null
+          socket_gems?: string[] | null
+          spd?: number
+          type: string
+        }
+        Update: {
+          atk?: number
+          character_id?: string
+          created_at?: string
+          crit_chance?: number
+          def?: number
+          description?: string | null
+          equipped?: boolean
+          hp_bonus?: number
+          icon?: string
+          id?: string
+          mp_bonus?: number
           name?: string
           rarity?: string
+          sell_price?: number
+          set_name?: string | null
+          socket_gems?: string[] | null
+          spd?: number
           type?: string
         }
         Relationships: [
@@ -126,6 +302,99 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      locations: {
+        Row: {
+          connected_to: string[] | null
+          description: string | null
+          grid_x: number
+          grid_y: number
+          icon: string
+          id: string
+          level_req: number
+          name: string
+          type: string
+        }
+        Insert: {
+          connected_to?: string[] | null
+          description?: string | null
+          grid_x?: number
+          grid_y?: number
+          icon?: string
+          id?: string
+          level_req?: number
+          name: string
+          type?: string
+        }
+        Update: {
+          connected_to?: string[] | null
+          description?: string | null
+          grid_x?: number
+          grid_y?: number
+          icon?: string
+          id?: string
+          level_req?: number
+          name?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      shop_items: {
+        Row: {
+          atk: number
+          class_req: string | null
+          crit_chance: number
+          def: number
+          description: string | null
+          hp_bonus: number
+          icon: string
+          id: string
+          level_req: number
+          mp_bonus: number
+          name: string
+          price: number
+          rarity: string
+          set_name: string | null
+          spd: number
+          type: string
+        }
+        Insert: {
+          atk?: number
+          class_req?: string | null
+          crit_chance?: number
+          def?: number
+          description?: string | null
+          hp_bonus?: number
+          icon?: string
+          id?: string
+          level_req?: number
+          mp_bonus?: number
+          name: string
+          price?: number
+          rarity?: string
+          set_name?: string | null
+          spd?: number
+          type: string
+        }
+        Update: {
+          atk?: number
+          class_req?: string | null
+          crit_chance?: number
+          def?: number
+          description?: string | null
+          hp_bonus?: number
+          icon?: string
+          id?: string
+          level_req?: number
+          mp_bonus?: number
+          name?: string
+          price?: number
+          rarity?: string
+          set_name?: string | null
+          spd?: number
+          type?: string
+        }
+        Relationships: []
       }
     }
     Views: {

@@ -9,7 +9,7 @@ import CharacterSheet from '@/components/CharacterSheet';
 import InventoryPanel from '@/components/InventoryPanel';
 import Tutorial from '@/components/Tutorial';
 import { Button } from '@/components/ui/button';
-import { LogOut, Users, BookOpen, Plus } from 'lucide-react';
+import { LogOut, Users, BookOpen, Star } from 'lucide-react';
 
 const Lobby = () => {
   const { user, signOut } = useAuth();
@@ -148,14 +148,17 @@ const Lobby = () => {
               Várd meg az osztálytársaidat, vagy beszélgess velük a chatben!
             </p>
             <div className="flex gap-3 justify-center flex-wrap">
-              <Button variant="outline" className="font-display border-border hover:border-gold/50 hover:text-gold">
+              <Button variant="outline" className="font-display border-border hover:border-gold/50 hover:text-gold" onClick={() => navigate('/map')}>
                 🗺️ Térkép
               </Button>
-              <Button variant="outline" className="font-display border-border hover:border-gold/50 hover:text-gold">
+              <Button variant="outline" className="font-display border-border hover:border-gold/50 hover:text-gold" onClick={() => navigate('/combat')}>
                 ⚔️ Harc
               </Button>
-              <Button variant="outline" className="font-display border-border hover:border-gold/50 hover:text-gold">
+              <Button variant="outline" className="font-display border-border hover:border-gold/50 hover:text-gold" onClick={() => navigate('/shop')}>
                 🏪 Bolt
+              </Button>
+              <Button variant="outline" className="font-display border-border hover:border-gold/50 hover:text-gold" onClick={() => navigate('/perks')}>
+                <Star className="w-4 h-4 mr-1" /> Képességek
               </Button>
             </div>
           </motion.div>
