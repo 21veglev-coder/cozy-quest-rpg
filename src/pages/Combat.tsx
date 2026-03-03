@@ -157,7 +157,7 @@ const Combat = () => {
     }, 1200);
   };
 
-  const executeTurn = (extraDmg?: number, heal?: number, skillBuff?: CombatState['buffs'][0], skillDebuff?: CombatState['debuffs'][0], skillName?: string) => {
+  const executeTurn = async (extraDmg?: number, heal?: number, skillBuff?: CombatState['buffs'][0], skillDebuff?: CombatState['debuffs'][0], skillName?: string) => {
     if (!combat || !character || !enemy || combat.finished) return;
     setRolling(true);
     setSelectedAction(null);
@@ -291,9 +291,13 @@ const Combat = () => {
       newLog.push(`🏆 Győzelem! +${enemy.xpReward} XP, +${enemy.goldReward + comboBonus}💰 ${comboBonus > 0 ? `(combo bónusz: +${comboBonus}💰)` : ''}`);
       const loot = rollLoot(enemy.level, enemy.locationType);
       if (loot) {
-        droppedItem = loot.name;
-        newLog.push(`🎁 Drop: ${loot.icon} ${loot.name} (${loot.rarity})!`);
-        saveLoot(loot, character);
+        const saved = await saveLoot(loot, character);
+        if (saved) {
+          droppedItem = loot.name;
+          newLog.push(`🎁 Drop: ${loot.icon} ${loot.name} (${loot.rarity})!`);
+        } else {
+          newLog.push(`⚠️ Drop mentési hiba: ${loot.name}`);
+        }
       }
     }
     if (result === 'lose') newLog.push('💀 Vereség...');
@@ -318,12 +322,12 @@ const Combat = () => {
       lastHit: playerHit,
     } : null);
 
-    if (result === 'win') applyRewards(enemy, newCombo);
-    if (result === 'lose') applyLoss();
+    if (result === 'win') await applyRewards(enemy, newCombo);
+    if (result === 'lose') await applyLoss();
     setTimeout(() => setRolling(false), 600);
   };
 
-  const doTurn = useCallback(() => executeTurn(), [combat, character, enemy, items]);
+  const doTurn = useCallback(() => { void executeTurn(); }, [combat, character, enemy, items]);
 
   const useSkill = (skill: SkillDef) => {
     if (!combat || !character) return;
@@ -342,7 +346,7 @@ const Combat = () => {
       cooldowns: { ...prev.cooldowns, [skill.id]: skill.cooldown },
     }) : null);
 
-    executeTurn(
+    void executeTurn(
       result.damage,
       result.heal,
       result.selfBuff as any,
@@ -351,14 +355,26 @@ const Combat = () => {
     );
   };
 
-  const saveLoot = async (loot: any, char: GameCharacter) => {
-    await supabase.from('inventory_items').insert({
+  const saveLoot = async (loot: any, char: GameCharacter): Promise<boolean> => {
+    const { data, error } = await supabase.from('inventory_items').insert({
       character_id: char.id,
       name: loot.name, type: loot.type, rarity: loot.rarity, icon: loot.icon,
       description: loot.description, atk: loot.atk, def: loot.def, spd: loot.spd,
       hp_bonus: loot.hp_bonus, mp_bonus: loot.mp_bonus, crit_chance: loot.crit_chance,
       set_name: loot.set_name, sell_price: loot.rarity === 'legendary' ? 100 : loot.rarity === 'epic' ? 60 : loot.rarity === 'rare' ? 30 : 10,
-    });
+    }).select('*').single();
+
+    if (error) {
+      console.error('Loot insert hiba:', error.message, loot);
+      toast.error(`A loot mentése sikertelen: ${loot.name}`);
+      return false;
+    }
+
+    if (data) {
+      setItems(prev => [...prev, data as InventoryItem]);
+    }
+
+    return true;
   };
 
   const applyRewards = async (e: EnemyDef, comboCount: number) => {
