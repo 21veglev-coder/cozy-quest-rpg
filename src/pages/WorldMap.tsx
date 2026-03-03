@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,6 +24,9 @@ const TYPE_LABELS: Record<string, string> = {
 const WorldMap = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const worldParam = parseInt(searchParams.get('world') || '1');
+  const [world, setWorld] = useState(worldParam);
   const [locations, setLocations] = useState<GameLocation[]>([]);
   const [character, setCharacter] = useState<GameCharacter | null>(null);
   const [selected, setSelected] = useState<GameLocation | null>(null);
@@ -31,21 +34,22 @@ const WorldMap = () => {
   useEffect(() => {
     if (!user) { navigate('/auth'); return; }
     loadData();
-  }, [user]);
+  }, [user, world]);
 
   const loadData = async () => {
     const [locRes, charRes] = await Promise.all([
-      supabase.from('locations').select('*'),
+      supabase.from('locations').select('*').eq('world', world),
       supabase.from('characters').select('*').eq('user_id', user!.id).single(),
     ]);
-    if (locRes.data) setLocations(locRes.data);
-    if (charRes.data) setCharacter(charRes.data);
+    if (locRes.data) setLocations(locRes.data as GameLocation[]);
+    if (charRes.data) setCharacter(charRes.data as unknown as GameCharacter);
+    setSelected(null);
   };
 
   const goToLocation = (loc: GameLocation) => {
     if (!character || character.level < loc.level_req) return;
     if (loc.type === 'town') {
-      navigate('/shop');
+      navigate(`/shop?world=${world}`);
     } else if (loc.type === 'dungeon' || loc.type === 'raid') {
       navigate(`/dungeon/${loc.id}`);
     } else {
@@ -53,8 +57,8 @@ const WorldMap = () => {
     }
   };
 
-  // Build 6x6 grid
-  const gridSize = 6;
+  const gridSize = world === 1 ? 6 : 5;
+  const canAccessWorld2 = character && character.prestige >= 1 && character.subclass;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -62,55 +66,77 @@ const WorldMap = () => {
         <Button variant="ghost" size="sm" onClick={() => navigate('/lobby')}>
           <ArrowLeft className="w-4 h-4 mr-1" /> Vissza
         </Button>
-        <h1 className="font-display text-lg text-gold text-glow-gold"><Map className="w-5 h-5 inline mr-1" />Világtérkép</h1>
+        <h1 className="font-display text-lg text-gold text-glow-gold">
+          <Map className="w-5 h-5 inline mr-1" />{world === 1 ? 'World 1' : 'World 2'} Térkép
+        </h1>
       </header>
 
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4">
-        {/* Grid Map */}
-        <div className="flex-1 flex items-center justify-center">
-          <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${gridSize}, 1fr)` }}>
-            {Array.from({ length: gridSize * gridSize }, (_, i) => {
-              const x = i % gridSize;
-              const y = Math.floor(i / gridSize);
-              const loc = locations.find(l => l.grid_x === x && l.grid_y === y);
-              const locked = loc && character ? character.level < loc.level_req : false;
+      {/* World Tabs */}
+      <div className="flex gap-2 px-4 pt-4">
+        <Button variant={world === 1 ? 'default' : 'outline'} size="sm" className="font-display text-xs"
+          onClick={() => setWorld(1)}>
+          🌍 World 1
+        </Button>
+        <Button variant={world === 2 ? 'default' : 'outline'} size="sm" className="font-display text-xs"
+          disabled={!canAccessWorld2}
+          onClick={() => canAccessWorld2 && setWorld(2)}>
+          🏴 World 2 {!canAccessWorld2 && '🔒'}
+        </Button>
+      </div>
 
-              return (
-                <motion.div key={i} whileHover={loc ? { scale: 1.1 } : {}}
-                  className={`w-12 h-12 md:w-16 md:h-16 rounded-lg border flex items-center justify-center text-lg cursor-pointer transition-all
-                    ${loc ? TYPE_COLORS[loc.type] : 'border-border/20 bg-secondary/20'}
-                    ${selected?.id === loc?.id ? 'glow-gold-sm ring-1 ring-gold/50' : ''}
-                    ${locked ? 'opacity-40' : ''}`}
-                  onClick={() => loc && setSelected(loc)}>
-                  {loc ? (locked ? <Lock className="w-4 h-4 text-muted-foreground" /> : <span>{loc.icon}</span>) : null}
-                </motion.div>
-              );
-            })}
+      {world === 2 && !canAccessWorld2 ? (
+        <div className="flex-1 flex items-center justify-center text-muted-foreground">
+          <div className="text-center">
+            <p className="text-4xl mb-3">🔒</p>
+            <p className="font-display">Prestige 1 és subclass szükséges a World 2-höz!</p>
           </div>
         </div>
+      ) : (
+        <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4">
+          <div className="flex-1 flex items-center justify-center">
+            <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${gridSize}, 1fr)` }}>
+              {Array.from({ length: gridSize * gridSize }, (_, i) => {
+                const x = i % gridSize;
+                const y = Math.floor(i / gridSize);
+                const loc = locations.find(l => l.grid_x === x && l.grid_y === y);
+                const locked = loc && character ? character.level < loc.level_req : false;
 
-        {/* Location Details */}
-        <div className="lg:w-80">
-          {selected ? (
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="rpg-panel-gold p-5">
-              <div className="text-4xl mb-3">{selected.icon}</div>
-              <h2 className="font-display text-xl text-gold mb-1">{selected.name}</h2>
-              <p className="text-xs text-muted-foreground mb-1">{TYPE_LABELS[selected.type]}</p>
-              <p className="text-sm text-foreground/80 mb-4">{selected.description}</p>
-              <p className="text-xs text-muted-foreground mb-4">Szükséges szint: <span className="text-gold">{selected.level_req}</span></p>
-              <Button className="w-full font-display" 
-                disabled={!character || character.level < selected.level_req}
-                onClick={() => goToLocation(selected)}>
-                {selected.type === 'town' ? '🏪 Belépés' : <><Swords className="w-4 h-4 mr-1" /> Felfedezés</>}
-              </Button>
-            </motion.div>
-          ) : (
-            <div className="rpg-panel p-5 text-center text-muted-foreground text-sm">
-              Válassz egy helyszínt a térképen!
+                return (
+                  <motion.div key={i} whileHover={loc ? { scale: 1.1 } : {}}
+                    className={`w-12 h-12 md:w-16 md:h-16 rounded-lg border flex items-center justify-center text-lg cursor-pointer transition-all
+                      ${loc ? TYPE_COLORS[loc.type] : 'border-border/20 bg-secondary/20'}
+                      ${selected?.id === loc?.id ? 'glow-gold-sm ring-1 ring-gold/50' : ''}
+                      ${locked ? 'opacity-40' : ''}`}
+                    onClick={() => loc && setSelected(loc)}>
+                    {loc ? (locked ? <Lock className="w-4 h-4 text-muted-foreground" /> : <span>{loc.icon}</span>) : null}
+                  </motion.div>
+                );
+              })}
             </div>
-          )}
+          </div>
+
+          <div className="lg:w-80">
+            {selected ? (
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="rpg-panel-gold p-5">
+                <div className="text-4xl mb-3">{selected.icon}</div>
+                <h2 className="font-display text-xl text-gold mb-1">{selected.name}</h2>
+                <p className="text-xs text-muted-foreground mb-1">{TYPE_LABELS[selected.type]} · World {selected.world}</p>
+                <p className="text-sm text-foreground/80 mb-4">{selected.description}</p>
+                <p className="text-xs text-muted-foreground mb-4">Szükséges szint: <span className="text-gold">{selected.level_req}</span></p>
+                <Button className="w-full font-display"
+                  disabled={!character || character.level < selected.level_req}
+                  onClick={() => goToLocation(selected)}>
+                  {selected.type === 'town' ? '🏪 Belépés' : <><Swords className="w-4 h-4 mr-1" /> Felfedezés</>}
+                </Button>
+              </motion.div>
+            ) : (
+              <div className="rpg-panel p-5 text-center text-muted-foreground text-sm">
+                Válassz egy helyszínt a térképen!
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

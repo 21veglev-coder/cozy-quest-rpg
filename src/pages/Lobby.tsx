@@ -174,6 +174,12 @@ const Lobby = () => {
               <Button variant="outline" className="font-display border-border hover:border-gold/50 hover:text-gold" onClick={() => navigate('/prestige')}>
                 ⭐ Prestige
               </Button>
+              <Button variant="outline" className="font-display border-border hover:border-gold/50 hover:text-gold" onClick={() => navigate('/clans')}>
+                🏰 Klánok
+              </Button>
+              <Button variant="outline" className="font-display border-border hover:border-gold/50 hover:text-gold" onClick={() => navigate('/teams')}>
+                👥 Csapatok
+              </Button>
             </div>
           </motion.div>
         </div>
