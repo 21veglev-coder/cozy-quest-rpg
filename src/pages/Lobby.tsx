@@ -65,6 +65,16 @@ const Lobby = () => {
   const toggleEquip = async (itemId: string) => {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
+    
+    if (!item.equipped && item.type !== 'potion' && item.type !== 'quest') {
+      // Unequip any item in the same slot first
+      const sameSlot = items.find(i => i.equipped && i.type === item.type);
+      if (sameSlot) {
+        await supabase.from('inventory_items').update({ equipped: false }).eq('id', sameSlot.id);
+        setItems(prev => prev.map(i => i.id === sameSlot.id ? { ...i, equipped: false } : i));
+      }
+    }
+    
     await supabase.from('inventory_items').update({ equipped: !item.equipped }).eq('id', itemId);
     setItems(prev => prev.map(i => i.id === itemId ? { ...i, equipped: !i.equipped } : i));
   };
