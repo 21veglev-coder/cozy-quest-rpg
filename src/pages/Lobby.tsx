@@ -160,6 +160,9 @@ const Lobby = () => {
               <Button variant="outline" className="font-display border-border hover:border-gold/50 hover:text-gold" onClick={() => navigate('/perks')}>
                 <Star className="w-4 h-4 mr-1" /> Képességek
               </Button>
+              <Button variant="outline" className="font-display border-border hover:border-gold/50 hover:text-gold" onClick={() => navigate('/prestige')}>
+                ⭐ Prestige
+              </Button>
             </div>
           </motion.div>
         </div>

@@ -47,6 +47,10 @@ const CharacterCreate = () => {
         max_hp: stats.hp,
         mp: stats.mp,
         max_mp: stats.mp,
+        atk: stats.atk,
+        def: stats.def,
+        spd: stats.spd,
+        crit_chance: stats.crit,
         gold: 50,
       }).select().single();
       if (error) throw error;
@@ -84,8 +88,8 @@ const CharacterCreate = () => {
           />
         </div>
 
-        {/* Class Selection */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        {/* Class Selection - 3 classes */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
           {CLASSES.map((cls) => (
             <motion.button
               key={cls.id}
@@ -120,14 +124,26 @@ const CharacterCreate = () => {
             </div>
 
             <div className="space-y-2">
-              <StatBar label="HP" value={selectedClass.stats.hp} max={150} color="bg-blood" />
-              <StatBar label="MP" value={selectedClass.stats.mp} max={120} color="bg-mana" />
-              <StatBar label="ATK" value={selectedClass.stats.atk} max={20} color="bg-ember" />
-              <StatBar label="DEF" value={selectedClass.stats.def} max={15} color="bg-foreground/60" />
-              <StatBar label="SPD" value={selectedClass.stats.spd} max={20} color="bg-nature" />
+              <StatBar label="HP" value={selectedClass.stats.hp} max={200} color="bg-blood" />
+              <StatBar label="MP" value={selectedClass.stats.mp} max={150} color="bg-mana" />
+              <StatBar label="ATK" value={selectedClass.stats.atk} max={25} color="bg-ember" />
+              <StatBar label="DEF" value={selectedClass.stats.def} max={20} color="bg-foreground/60" />
+              <StatBar label="SPD" value={selectedClass.stats.spd} max={25} color="bg-nature" />
+              <StatBar label="CRIT" value={selectedClass.stats.crit} max={20} color="bg-gold" />
+              <div className="grid grid-cols-5 gap-1 mt-3 text-center text-[10px]">
+                <div className="rpg-panel p-1"><p className="text-ember font-bold">{selectedClass.stats.str}</p><p className="text-muted-foreground">STR</p></div>
+                <div className="rpg-panel p-1"><p className="text-mana font-bold">{selectedClass.stats.int}</p><p className="text-muted-foreground">INT</p></div>
+                <div className="rpg-panel p-1"><p className="text-nature font-bold">{selectedClass.stats.agi}</p><p className="text-muted-foreground">AGI</p></div>
+                <div className="rpg-panel p-1"><p className="text-blood font-bold">{selectedClass.stats.vit}</p><p className="text-muted-foreground">VIT</p></div>
+                <div className="rpg-panel p-1"><p className="text-gold font-bold">{selectedClass.stats.luk}</p><p className="text-muted-foreground">LUK</p></div>
+              </div>
             </div>
           </motion.div>
         </AnimatePresence>
+
+        <p className="text-xs text-muted-foreground text-center mb-4">
+          💡 Lvl 50 után Prestige-elhetsz, és Prestige 1-nél subclass-t választhatsz!
+        </p>
 
         <Button
           onClick={handleCreate}

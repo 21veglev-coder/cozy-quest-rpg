@@ -1,4 +1,4 @@
-import { GameCharacter, CLASSES } from '@/types/game';
+import { GameCharacter, CLASSES, SUBCLASSES, PRESTIGE_LEVEL_REQ } from '@/types/game';
 import { motion } from 'framer-motion';
 
 interface CharacterSheetProps {
@@ -7,21 +7,25 @@ interface CharacterSheetProps {
 
 const CharacterSheet = ({ character }: CharacterSheetProps) => {
   const cls = CLASSES.find(c => c.id === character.class)!;
+  const sub = character.subclass ? SUBCLASSES.find(s => s.id === character.subclass) : null;
   const hpPercent = (character.hp / character.max_hp) * 100;
   const mpPercent = (character.mp / character.max_mp) * 100;
   const xpPercent = (character.xp / (character.level * 100)) * 100;
 
   return (
     <div className="rpg-panel-gold p-4">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="text-3xl animate-float">{cls.icon}</div>
-        <div>
-          <h3 className="font-display font-bold text-foreground">{character.name}</h3>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="text-3xl animate-float">{sub?.icon || cls.icon}</div>
+        <div className="min-w-0">
+          <h3 className="font-display font-bold text-foreground truncate">{character.name}</h3>
           <p className={`text-xs font-display ${cls.color}`}>
-            {cls.name} · Lvl {character.level}
+            {cls.name}{sub ? ` · ${sub.name}` : ''} · Lvl {character.level}
           </p>
+          {character.prestige > 0 && (
+            <p className="text-[10px] text-gold">⭐ Prestige {character.prestige}</p>
+          )}
         </div>
-        <div className="ml-auto text-right">
+        <div className="ml-auto text-right shrink-0">
           <p className="text-gold font-display text-sm">💰 {character.gold}</p>
           {character.perk_points > 0 && <p className="text-gold text-xs">⭐ {character.perk_points}</p>}
         </div>
@@ -61,7 +65,7 @@ const CharacterSheet = ({ character }: CharacterSheetProps) => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-2 text-center text-[10px]">
+      <div className="grid grid-cols-5 gap-1.5 text-center text-[10px]">
         <div className="rpg-panel p-1.5">
           <p className="text-ember font-bold">{character.atk}</p>
           <p className="text-muted-foreground">ATK</p>
@@ -77,6 +81,10 @@ const CharacterSheet = ({ character }: CharacterSheetProps) => {
         <div className="rpg-panel p-1.5">
           <p className="text-gold font-bold">{character.crit_chance}%</p>
           <p className="text-muted-foreground">CRIT</p>
+        </div>
+        <div className="rpg-panel p-1.5">
+          <p className="text-gold font-bold">P{character.prestige}</p>
+          <p className="text-muted-foreground">PRE</p>
         </div>
       </div>
     </div>
