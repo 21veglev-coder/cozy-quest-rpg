@@ -45,8 +45,13 @@ const Perks = () => {
     loadData();
   };
 
-  const availablePerks = PERKS.filter(p => !p.classReq || p.classReq === character?.class);
-  const classPerks = availablePerks.filter(p => p.classReq);
+  const availablePerks = PERKS.filter(p => {
+    if (p.classReq && p.classReq !== character?.class) return false;
+    if (p.subclassReq && p.subclassReq !== character?.subclass) return false;
+    return true;
+  });
+  const baseClassPerks = availablePerks.filter(p => p.classReq && !p.subclassReq);
+  const subclassPerks = availablePerks.filter(p => p.subclassReq);
   const universalPerks = availablePerks.filter(p => !p.classReq);
 
   if (!character) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="text-gold font-display animate-pulse-glow">Betöltés...</div></div>;
