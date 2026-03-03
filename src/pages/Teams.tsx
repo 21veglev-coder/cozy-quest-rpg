@@ -318,7 +318,7 @@ const Teams = () => {
                 {isReady ? '✅ Kész' : '⏳ Kész Jelzés'}
               </Button>
               {myTeam.leader_id === user!.id && (
-                <Button className="flex-1 font-display" onClick={startDungeon}
+                <Button className="flex-1 font-display" onClick={startMission}
                   disabled={!myTeamMembers.every(m => m.ready) || myTeamMembers.length < 2}>
                   <Swords className="w-4 h-4 mr-1" /> Indulás!
                 </Button>
