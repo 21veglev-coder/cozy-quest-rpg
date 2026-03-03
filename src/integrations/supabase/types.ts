@@ -62,7 +62,9 @@ export type Database = {
           mp: number
           name: string
           perk_points: number
+          prestige: number
           spd: number
+          subclass: string | null
           user_id: string
           xp: number
         }
@@ -81,7 +83,9 @@ export type Database = {
           mp: number
           name: string
           perk_points?: number
+          prestige?: number
           spd?: number
+          subclass?: string | null
           user_id: string
           xp?: number
         }
@@ -100,7 +104,9 @@ export type Database = {
           mp?: number
           name?: string
           perk_points?: number
+          prestige?: number
           spd?: number
+          subclass?: string | null
           user_id?: string
           xp?: number
         }
