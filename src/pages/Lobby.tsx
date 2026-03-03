@@ -187,7 +187,7 @@ const Lobby = () => {
         {/* Right - Inventory & Chat */}
         <div className="lg:col-span-4 flex flex-col gap-4 min-h-0">
           <div className="flex-1 min-h-0 overflow-hidden">
-            <InventoryPanel items={items} onEquip={toggleEquip} />
+            <InventoryPanel items={items} onEquip={toggleEquip} onRefresh={() => { loadCharacter(); }} />
           </div>
           <div className="h-64 lg:h-72">
             <ChatPanel />

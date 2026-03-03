@@ -92,13 +92,17 @@ const InventoryPanel = ({ items, onEquip, onRefresh }: InventoryPanelProps) => {
         <div className="grid grid-cols-4 gap-2">
           {bag.map(item => (
             <motion.div key={item.id} whileHover={{ scale: 1.1 }}
-              className="rpg-panel aspect-square flex items-center justify-center cursor-pointer hover:border-glow transition-all group relative"
+              className="rpg-panel aspect-square flex flex-col items-center justify-center cursor-pointer hover:border-glow transition-all group relative"
               onClick={() => onEquip?.(item.id)}
-              onContextMenu={(e) => { e.preventDefault(); sellItem(item); }}
-              title={`${item.name} - ${item.description}\n[${item.type.toUpperCase()}] ATK:${item.atk} DEF:${item.def} SPD:${item.spd}\nJobb klikk: Elad (${item.sell_price}💰)`}>
-              <span className="text-xl">{item.icon}</span>
+              title={`${item.name} - ${item.description}\n[${item.type.toUpperCase()}] ATK:${item.atk} DEF:${item.def} SPD:${item.spd}`}>
+              <span className="text-lg">{item.icon}</span>
               <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
                 style={{ backgroundColor: item.rarity === 'legendary' ? 'hsl(40 80% 50%)' : item.rarity === 'epic' ? 'hsl(260 40% 50%)' : item.rarity === 'rare' ? 'hsl(220 70% 55%)' : 'transparent' }} />
+              <button
+                className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[7px] font-bold opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                onClick={(e) => { e.stopPropagation(); sellItem(item); }}
+                title={`Elad: ${item.sell_price}💰`}
+              >💰</button>
             </motion.div>
           ))}
           {[...Array(Math.max(0, 16 - bag.length))].map((_, i) => (
