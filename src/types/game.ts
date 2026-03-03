@@ -87,7 +87,7 @@ export const ITEM_SLOTS: { id: ItemSlot; name: string; icon: string }[] = [
 ];
 
 export const PRESTIGE_LEVEL_REQ = 50;
-export const PRESTIGE_SUBCLASS_REQ = 1; // Minimum prestige to unlock subclass
+export const PRESTIGE_SUBCLASS_REQ = 1;
 
 export interface GameCharacter {
   id: string;
@@ -140,6 +140,7 @@ export interface ShopItem {
   price: number;
   level_req: number;
   class_req: string | null;
+  subclass_req: string | null;
   atk: number;
   def: number;
   spd: number;
@@ -147,6 +148,7 @@ export interface ShopItem {
   mp_bonus: number;
   crit_chance: number;
   set_name: string | null;
+  world: number;
 }
 
 export interface GameLocation {
@@ -159,6 +161,7 @@ export interface GameLocation {
   grid_x: number;
   grid_y: number;
   connected_to: string[];
+  world: number;
 }
 
 export interface CombatLogEntry {
@@ -199,6 +202,46 @@ export interface CharacterPerk {
   tier: number;
 }
 
+export interface Clan {
+  id: string;
+  name: string;
+  icon: string;
+  description: string | null;
+  leader_id: string;
+  level: number;
+  xp: number;
+  max_members: number;
+  created_at: string;
+}
+
+export interface ClanMember {
+  id: string;
+  clan_id: string;
+  user_id: string;
+  character_id: string;
+  role: 'leader' | 'officer' | 'member';
+  joined_at: string;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  leader_id: string;
+  target_location_id: string | null;
+  status: 'forming' | 'ready' | 'in_progress' | 'completed';
+  max_size: number;
+  created_at: string;
+}
+
+export interface TeamMember {
+  id: string;
+  team_id: string;
+  user_id: string;
+  character_id: string;
+  ready: boolean;
+  joined_at: string;
+}
+
 // ---- PERK DEFINITIONS ----
 export interface PerkDef {
   id: string;
@@ -216,16 +259,12 @@ export const PERKS: PerkDef[] = [
   { id: 'brute_force', name: 'Nyers Erő', icon: '💪', description: 'ATK +3/tier', maxTier: 5, classReq: 'warrior', subclassReq: null, effect: t => ({ atk: t * 3 }) },
   { id: 'iron_skin', name: 'Vasalja Bőr', icon: '🛡️', description: 'DEF +3/tier', maxTier: 5, classReq: 'warrior', subclassReq: null, effect: t => ({ def: t * 3 }) },
   { id: 'war_cry', name: 'Harci Kiáltás', icon: '📣', description: 'HP +15/tier', maxTier: 4, classReq: 'warrior', subclassReq: null, effect: t => ({ hp: t * 15 }) },
-  // Tank subclass perks
   { id: 'fortress', name: 'Erőd', icon: '🏰', description: 'DEF +5/tier', maxTier: 5, classReq: 'warrior', subclassReq: 'tank', effect: t => ({ def: t * 5 }) },
   { id: 'shield_wall', name: 'Pajzsfal', icon: '🧱', description: 'HP +25/tier', maxTier: 5, classReq: 'warrior', subclassReq: 'tank', effect: t => ({ hp: t * 25 }) },
-  // Berserker subclass perks
   { id: 'blood_rage', name: 'Vérszomj', icon: '🩸', description: 'ATK +6/tier', maxTier: 5, classReq: 'warrior', subclassReq: 'berserker', effect: t => ({ atk: t * 6 }) },
   { id: 'frenzy', name: 'Őrjöngés', icon: '😤', description: 'SPD +4/tier, DEF -2/tier', maxTier: 4, classReq: 'warrior', subclassReq: 'berserker', effect: t => ({ spd: t * 4, def: t * -2 }) },
-  // Samurai subclass perks
   { id: 'bushido', name: 'Bushido', icon: '⛩️', description: 'CRIT +5%/tier', maxTier: 5, classReq: 'warrior', subclassReq: 'samurai', effect: t => ({ crit: t * 5 }) },
   { id: 'blade_dance', name: 'Pengék Tánca', icon: '💃', description: 'ATK +3, SPD +2/tier', maxTier: 4, classReq: 'warrior', subclassReq: 'samurai', effect: t => ({ atk: t * 3, spd: t * 2 }) },
-  // Javliner subclass perks
   { id: 'piercing', name: 'Átütés', icon: '🔱', description: 'ATK +4/tier', maxTier: 5, classReq: 'warrior', subclassReq: 'javliner', effect: t => ({ atk: t * 4 }) },
   { id: 'reach', name: 'Hosszú Kar', icon: '📏', description: 'SPD +3/tier', maxTier: 4, classReq: 'warrior', subclassReq: 'javliner', effect: t => ({ spd: t * 3 }) },
 
@@ -233,16 +272,12 @@ export const PERKS: PerkDef[] = [
   { id: 'arcane_power', name: 'Mágikus Erő', icon: '🔮', description: 'ATK +4/tier', maxTier: 5, classReq: 'mage', subclassReq: null, effect: t => ({ atk: t * 4 }) },
   { id: 'mana_well', name: 'Mana Kút', icon: '💧', description: 'MP +20/tier', maxTier: 5, classReq: 'mage', subclassReq: null, effect: t => ({ mp: t * 20 }) },
   { id: 'spell_haste', name: 'Varázs Gyorsaság', icon: '⚡', description: 'SPD +2/tier', maxTier: 4, classReq: 'mage', subclassReq: null, effect: t => ({ spd: t * 2 }) },
-  // Healer subclass perks
   { id: 'divine_light', name: 'Szent Fény', icon: '☀️', description: 'HP +20/tier', maxTier: 5, classReq: 'mage', subclassReq: 'healer', effect: t => ({ hp: t * 20 }) },
   { id: 'guardian_angel', name: 'Őrangyal', icon: '👼', description: 'DEF +4/tier', maxTier: 5, classReq: 'mage', subclassReq: 'healer', effect: t => ({ def: t * 4 }) },
-  // Necromancer subclass perks
   { id: 'dark_pact', name: 'Sötét Paktum', icon: '☠️', description: 'ATK +5/tier', maxTier: 5, classReq: 'mage', subclassReq: 'necromancer', effect: t => ({ atk: t * 5 }) },
   { id: 'soul_drain', name: 'Lélek Szívás', icon: '👻', description: 'HP +15, MP +10/tier', maxTier: 4, classReq: 'mage', subclassReq: 'necromancer', effect: t => ({ hp: t * 15, mp: t * 10 }) },
-  // Arcanist subclass perks
   { id: 'pure_magic', name: 'Tiszta Mágia', icon: '✴️', description: 'ATK +6/tier', maxTier: 5, classReq: 'mage', subclassReq: 'arcanist', effect: t => ({ atk: t * 6 }) },
   { id: 'mana_surge', name: 'Mana Cunami', icon: '🌊', description: 'MP +30/tier', maxTier: 4, classReq: 'mage', subclassReq: 'arcanist', effect: t => ({ mp: t * 30 }) },
-  // Elementalist subclass perks
   { id: 'elemental_fury', name: 'Elemi Düh', icon: '🌪️', description: 'ATK +4, SPD +2/tier', maxTier: 5, classReq: 'mage', subclassReq: 'elementalist', effect: t => ({ atk: t * 4, spd: t * 2 }) },
   { id: 'storm_shield', name: 'Vihar Pajzs', icon: '⛈️', description: 'DEF +3, MP +15/tier', maxTier: 4, classReq: 'mage', subclassReq: 'elementalist', effect: t => ({ def: t * 3, mp: t * 15 }) },
 
@@ -250,16 +285,12 @@ export const PERKS: PerkDef[] = [
   { id: 'backstab', name: 'Hátba Szúrás', icon: '🔪', description: 'CRIT +4%/tier', maxTier: 5, classReq: 'rogue', subclassReq: null, effect: t => ({ crit: t * 4 }) },
   { id: 'evasion', name: 'Kitérés', icon: '💨', description: 'SPD +3/tier', maxTier: 5, classReq: 'rogue', subclassReq: null, effect: t => ({ spd: t * 3 }) },
   { id: 'poison_blade', name: 'Mérgezett Penge', icon: '☠️', description: 'ATK +2/tier', maxTier: 4, classReq: 'rogue', subclassReq: null, effect: t => ({ atk: t * 2 }) },
-  // Assassin subclass perks
   { id: 'death_mark', name: 'Haláljegy', icon: '💀', description: 'CRIT +8%/tier', maxTier: 5, classReq: 'rogue', subclassReq: 'assassin', effect: t => ({ crit: t * 8 }) },
   { id: 'execute', name: 'Kivégzés', icon: '⚰️', description: 'ATK +6/tier', maxTier: 4, classReq: 'rogue', subclassReq: 'assassin', effect: t => ({ atk: t * 6 }) },
-  // Archer subclass perks
   { id: 'eagle_eye', name: 'Sassszem', icon: '🦅', description: 'CRIT +5%, ATK +3/tier', maxTier: 5, classReq: 'rogue', subclassReq: 'archer', effect: t => ({ crit: t * 5, atk: t * 3 }) },
   { id: 'wind_arrow', name: 'Szélnyíl', icon: '🏹', description: 'SPD +4/tier', maxTier: 4, classReq: 'rogue', subclassReq: 'archer', effect: t => ({ spd: t * 4 }) },
-  // Hunter subclass perks
   { id: 'tracking', name: 'Nyomkövetés', icon: '🐾', description: 'SPD +2, ATK +2/tier', maxTier: 5, classReq: 'rogue', subclassReq: 'hunter', effect: t => ({ spd: t * 2, atk: t * 2 }) },
   { id: 'survival', name: 'Túlélés', icon: '🏕️', description: 'HP +15, DEF +2/tier', maxTier: 4, classReq: 'rogue', subclassReq: 'hunter', effect: t => ({ hp: t * 15, def: t * 2 }) },
-  // Shadowblade subclass perks
   { id: 'shadow_step', name: 'Árnyéklépés', icon: '🌑', description: 'SPD +5/tier', maxTier: 5, classReq: 'rogue', subclassReq: 'shadowblade', effect: t => ({ spd: t * 5 }) },
   { id: 'venom_coat', name: 'Méregbevonat', icon: '🧪', description: 'ATK +4, CRIT +3/tier', maxTier: 4, classReq: 'rogue', subclassReq: 'shadowblade', effect: t => ({ atk: t * 4, crit: t * 3 }) },
 
@@ -282,19 +313,32 @@ export interface EnemyDef {
   goldReward: number;
   locationType: 'zone' | 'dungeon' | 'raid';
   minZoneLevel: number;
+  world?: number;
 }
 
 export const ENEMIES: EnemyDef[] = [
-  { name: 'Goblin', icon: '👺', level: 1, hp: 30, atk: 5, def: 2, spd: 8, xpReward: 15, goldReward: 5, locationType: 'zone', minZoneLevel: 1 },
-  { name: 'Farkas', icon: '🐺', level: 2, hp: 45, atk: 8, def: 3, spd: 12, xpReward: 25, goldReward: 8, locationType: 'zone', minZoneLevel: 1 },
-  { name: 'Pók Királyné', icon: '🕷️', level: 3, hp: 60, atk: 10, def: 5, spd: 6, xpReward: 40, goldReward: 15, locationType: 'zone', minZoneLevel: 3 },
-  { name: 'Csontváz Harcos', icon: '💀', level: 5, hp: 80, atk: 14, def: 8, spd: 7, xpReward: 60, goldReward: 20, locationType: 'zone', minZoneLevel: 5 },
-  { name: 'Tűz Elementál', icon: '🔥', level: 7, hp: 120, atk: 20, def: 6, spd: 10, xpReward: 100, goldReward: 35, locationType: 'zone', minZoneLevel: 7 },
-  { name: 'Sötét Varázsló', icon: '🧙‍♂️', level: 4, hp: 70, atk: 16, def: 4, spd: 9, xpReward: 80, goldReward: 30, locationType: 'dungeon', minZoneLevel: 4 },
-  { name: 'Kőgolem', icon: '🗿', level: 5, hp: 150, atk: 12, def: 18, spd: 3, xpReward: 90, goldReward: 25, locationType: 'dungeon', minZoneLevel: 4 },
-  { name: 'Vámpír Gróf', icon: '🧛', level: 6, hp: 100, atk: 18, def: 10, spd: 14, xpReward: 120, goldReward: 45, locationType: 'dungeon', minZoneLevel: 6 },
-  { name: 'Lich Király', icon: '👑', level: 8, hp: 200, atk: 22, def: 12, spd: 8, xpReward: 200, goldReward: 80, locationType: 'dungeon', minZoneLevel: 8 },
-  { name: 'Ősi Sárkány', icon: '🐉', level: 10, hp: 500, atk: 35, def: 20, spd: 12, xpReward: 500, goldReward: 200, locationType: 'raid', minZoneLevel: 8 },
+  // World 1
+  { name: 'Goblin', icon: '👺', level: 1, hp: 30, atk: 5, def: 2, spd: 8, xpReward: 15, goldReward: 5, locationType: 'zone', minZoneLevel: 1, world: 1 },
+  { name: 'Farkas', icon: '🐺', level: 2, hp: 45, atk: 8, def: 3, spd: 12, xpReward: 25, goldReward: 8, locationType: 'zone', minZoneLevel: 1, world: 1 },
+  { name: 'Pók Királyné', icon: '🕷️', level: 3, hp: 60, atk: 10, def: 5, spd: 6, xpReward: 40, goldReward: 15, locationType: 'zone', minZoneLevel: 3, world: 1 },
+  { name: 'Csontváz Harcos', icon: '💀', level: 5, hp: 80, atk: 14, def: 8, spd: 7, xpReward: 60, goldReward: 20, locationType: 'zone', minZoneLevel: 5, world: 1 },
+  { name: 'Tűz Elementál', icon: '🔥', level: 7, hp: 120, atk: 20, def: 6, spd: 10, xpReward: 100, goldReward: 35, locationType: 'zone', minZoneLevel: 7, world: 1 },
+  { name: 'Sötét Varázsló', icon: '🧙‍♂️', level: 4, hp: 70, atk: 16, def: 4, spd: 9, xpReward: 80, goldReward: 30, locationType: 'dungeon', minZoneLevel: 4, world: 1 },
+  { name: 'Kőgolem', icon: '🗿', level: 5, hp: 150, atk: 12, def: 18, spd: 3, xpReward: 90, goldReward: 25, locationType: 'dungeon', minZoneLevel: 4, world: 1 },
+  { name: 'Vámpír Gróf', icon: '🧛', level: 6, hp: 100, atk: 18, def: 10, spd: 14, xpReward: 120, goldReward: 45, locationType: 'dungeon', minZoneLevel: 6, world: 1 },
+  { name: 'Lich Király', icon: '👑', level: 8, hp: 200, atk: 22, def: 12, spd: 8, xpReward: 200, goldReward: 80, locationType: 'dungeon', minZoneLevel: 8, world: 1 },
+  { name: 'Ősi Sárkány', icon: '🐉', level: 10, hp: 500, atk: 35, def: 20, spd: 12, xpReward: 500, goldReward: 200, locationType: 'raid', minZoneLevel: 8, world: 1 },
+
+  // World 2 
+  { name: 'Démoni Skorpió', icon: '🦂', level: 6, hp: 90, atk: 18, def: 8, spd: 14, xpReward: 80, goldReward: 30, locationType: 'zone', minZoneLevel: 5, world: 2 },
+  { name: 'Jég Óriás', icon: '🧊', level: 8, hp: 180, atk: 22, def: 16, spd: 5, xpReward: 130, goldReward: 50, locationType: 'zone', minZoneLevel: 8, world: 2 },
+  { name: 'Lávakobold', icon: '👹', level: 7, hp: 100, atk: 24, def: 6, spd: 16, xpReward: 110, goldReward: 40, locationType: 'zone', minZoneLevel: 5, world: 2 },
+  { name: 'Csontváz Mágus', icon: '☠️', level: 7, hp: 85, atk: 25, def: 5, spd: 12, xpReward: 100, goldReward: 40, locationType: 'dungeon', minZoneLevel: 5, world: 2 },
+  { name: 'Árnyék Démon', icon: '😈', level: 8, hp: 160, atk: 28, def: 12, spd: 15, xpReward: 150, goldReward: 60, locationType: 'dungeon', minZoneLevel: 6, world: 2 },
+  { name: 'Jég Sárkány', icon: '🐲', level: 9, hp: 250, atk: 30, def: 18, spd: 10, xpReward: 250, goldReward: 100, locationType: 'dungeon', minZoneLevel: 8, world: 2 },
+  { name: 'Elemi Titán', icon: '⚡', level: 10, hp: 300, atk: 35, def: 15, spd: 12, xpReward: 300, goldReward: 120, locationType: 'dungeon', minZoneLevel: 8, world: 2 },
+  { name: 'Véres Gladiátor', icon: '🗡️', level: 8, hp: 200, atk: 32, def: 14, spd: 18, xpReward: 200, goldReward: 80, locationType: 'dungeon', minZoneLevel: 5, world: 2 },
+  { name: 'Pokol Sárkány', icon: '🐲', level: 12, hp: 800, atk: 50, def: 25, spd: 14, xpReward: 800, goldReward: 350, locationType: 'raid', minZoneLevel: 10, world: 2 },
 ];
 
 // ---- SET BONUSES ----
@@ -303,6 +347,9 @@ export const SET_BONUSES: Record<string, { pieces: number; bonus: string; effect
   'Tűz': { pieces: 2, bonus: 'ATK +10, MP +30', effect: { atk: 10, mp: 30 } },
   'Szent': { pieces: 2, bonus: 'HP +50, DEF +5', effect: { hp: 50, def: 5 } },
   'Legenda': { pieces: 2, bonus: 'ATK +15, DEF +10, HP +50', effect: { atk: 15, def: 10, hp: 50 } },
+  'Erőd': { pieces: 3, bonus: 'DEF +20, HP +80', effect: { def: 20, hp: 80 } },
+  'Vérszomj': { pieces: 2, bonus: 'ATK +20, CRIT +10%', effect: { atk: 20, crit: 10 } },
+  'Halál': { pieces: 2, bonus: 'ATK +15, MP +40', effect: { atk: 15, mp: 40 } },
 };
 
 export const RARITY_COLORS: Record<string, string> = {
@@ -321,12 +368,12 @@ export const STARTER_ITEMS: Record<CharacterClass, Omit<InventoryItem, 'id' | 'c
   ],
   mage: [
     { name: 'Fabot', type: 'weapon', rarity: 'common', icon: '🪄', description: 'Egyszerű varázspálca.', equipped: true, atk: 4, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 5, crit_chance: 1, socket_gems: [], set_name: null, sell_price: 5 },
-    { name: 'Köpeny', type: 'chest', rarity: 'common', icon: '🧥', description: 'Mágikus köntös.', equipped: true, atk: 0, def: 2, spd: 0, hp_bonus: 0, mp_bonus: 15, crit_chance: 0, socket_gems: [], set_name: null, sell_price: 5 },
-    { name: 'Mana Ital', type: 'potion', rarity: 'uncommon', icon: '💧', description: '+30 MP', equipped: false, atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 30, crit_chance: 0, socket_gems: [], set_name: null, sell_price: 3 },
+    { name: 'Köntös', type: 'chest', rarity: 'common', icon: '👘', description: 'Könnyű ruha.', equipped: true, atk: 0, def: 1, spd: 1, hp_bonus: 0, mp_bonus: 15, crit_chance: 0, socket_gems: [], set_name: null, sell_price: 5 },
+    { name: 'Mana Ital', type: 'potion', rarity: 'common', icon: '🧪', description: '+20 MP', equipped: false, atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 20, crit_chance: 0, socket_gems: [], set_name: null, sell_price: 3 },
   ],
   rogue: [
-    { name: 'Tőr', type: 'weapon', rarity: 'common', icon: '🔪', description: 'Gyors pengéjű tőr.', equipped: true, atk: 3, def: 0, spd: 2, hp_bonus: 0, mp_bonus: 0, crit_chance: 3, socket_gems: [], set_name: null, sell_price: 5 },
-    { name: 'Sötét Ruha', type: 'chest', rarity: 'common', icon: '🥷', description: 'Rejtőzködéshez tökéletes.', equipped: true, atk: 0, def: 2, spd: 3, hp_bonus: 0, mp_bonus: 0, crit_chance: 1, socket_gems: [], set_name: null, sell_price: 5 },
-    { name: 'Füstbomba', type: 'potion', rarity: 'uncommon', icon: '💨', description: 'Meneküléshez.', equipped: false, atk: 0, def: 0, spd: 5, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, socket_gems: [], set_name: null, sell_price: 8 },
+    { name: 'Rozsdás Tőr', type: 'weapon', rarity: 'common', icon: '🔪', description: 'Éles, de kopott.', equipped: true, atk: 3, def: 0, spd: 2, hp_bonus: 0, mp_bonus: 0, crit_chance: 3, socket_gems: [], set_name: null, sell_price: 5 },
+    { name: 'Rongyos Köpeny', type: 'chest', rarity: 'common', icon: '🧥', description: 'Jobb, mint a semmi.', equipped: true, atk: 0, def: 2, spd: 2, hp_bonus: 5, mp_bonus: 0, crit_chance: 0, socket_gems: [], set_name: null, sell_price: 5 },
+    { name: 'Kis Gyógyital', type: 'potion', rarity: 'common', icon: '🧪', description: '+30 HP', equipped: false, atk: 0, def: 0, spd: 0, hp_bonus: 30, mp_bonus: 0, crit_chance: 0, socket_gems: [], set_name: null, sell_price: 3 },
   ],
 };
