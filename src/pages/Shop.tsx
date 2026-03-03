@@ -14,12 +14,18 @@ const SLOT_LABELS: Record<string, string> = {
   necklace: '📿 Nyaklánc', potion: '🧪 Ital',
 };
 
+const SHOP_NAMES: Record<string, { label: string; icon: string }> = {
+  kezdo_falu: { label: 'Kezdő Falu Bolt', icon: '🏘️' },
+  kereskedo_varos: { label: 'Kereskedő Város Bolt', icon: '🏪' },
+};
+
 const Shop = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const worldParam = parseInt(searchParams.get('world') || '1');
   const [world, setWorld] = useState(worldParam);
+  const [shopName, setShopName] = useState('kezdo_falu');
   const [items, setItems] = useState<ShopItem[]>([]);
   const [character, setCharacter] = useState<GameCharacter | null>(null);
   const [filter, setFilter] = useState<string>('all');
@@ -27,11 +33,13 @@ const Shop = () => {
   useEffect(() => {
     if (!user) { navigate('/auth'); return; }
     loadData();
-  }, [user, world]);
+  }, [user, world, shopName]);
 
   const loadData = async () => {
+    const query = supabase.from('shop_items').select('*').eq('world', world).order('level_req');
+    if (world === 1) query.eq('shop_name', shopName);
     const [shopRes, charRes] = await Promise.all([
-      supabase.from('shop_items').select('*').eq('world', world).order('level_req'),
+      query,
       supabase.from('characters').select('*').eq('user_id', user!.id).single(),
     ]);
     if (shopRes.data) setItems(shopRes.data);
@@ -99,15 +107,27 @@ const Shop = () => {
       {/* World Tabs */}
       <div className="flex gap-2 px-4 pt-4">
         <Button variant={world === 1 ? 'default' : 'outline'} size="sm" className="font-display text-xs"
-          onClick={() => setWorld(1)}>
+          onClick={() => { setWorld(1); setShopName('kezdo_falu'); }}>
           🌍 World 1
         </Button>
         <Button variant={world === 2 ? 'default' : 'outline'} size="sm" className="font-display text-xs"
           disabled={!canAccessWorld2}
-          onClick={() => canAccessWorld2 && setWorld(2)}>
+          onClick={() => { if (canAccessWorld2) { setWorld(2); setShopName(''); } }}>
           🏴 World 2 {!canAccessWorld2 && '🔒'}
         </Button>
       </div>
+
+      {/* Shop location tabs (World 1 only) */}
+      {world === 1 && (
+        <div className="flex gap-2 px-4 pt-2">
+          {Object.entries(SHOP_NAMES).map(([key, { label, icon }]) => (
+            <Button key={key} variant={shopName === key ? 'default' : 'outline'} size="sm"
+              className="font-display text-xs" onClick={() => setShopName(key)}>
+              {icon} {label}
+            </Button>
+          ))}
+        </div>
+      )}
 
       {/* Slot filter */}
       <div className="flex gap-2 p-4 flex-wrap">
