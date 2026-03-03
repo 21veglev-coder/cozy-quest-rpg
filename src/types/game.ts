@@ -327,28 +327,50 @@ export interface EnemyDef {
 }
 
 export const ENEMIES: EnemyDef[] = [
-  // World 1
+  // World 1 - Zone
   { name: 'Goblin', icon: '👺', level: 1, hp: 30, atk: 5, def: 2, spd: 8, xpReward: 15, goldReward: 5, locationType: 'zone', minZoneLevel: 1, world: 1 },
   { name: 'Farkas', icon: '🐺', level: 2, hp: 45, atk: 8, def: 3, spd: 12, xpReward: 25, goldReward: 8, locationType: 'zone', minZoneLevel: 1, world: 1 },
   { name: 'Pók Királyné', icon: '🕷️', level: 3, hp: 60, atk: 10, def: 5, spd: 6, xpReward: 40, goldReward: 15, locationType: 'zone', minZoneLevel: 3, world: 1 },
+  { name: 'Bandita', icon: '🥷', level: 2, hp: 40, atk: 9, def: 4, spd: 10, xpReward: 20, goldReward: 10, locationType: 'zone', minZoneLevel: 1, world: 1 },
+  { name: 'Mérgező Kígyó', icon: '🐍', level: 3, hp: 35, atk: 12, def: 2, spd: 15, xpReward: 30, goldReward: 12, locationType: 'zone', minZoneLevel: 2, world: 1 },
   { name: 'Csontváz Harcos', icon: '💀', level: 5, hp: 80, atk: 14, def: 8, spd: 7, xpReward: 60, goldReward: 20, locationType: 'zone', minZoneLevel: 5, world: 1 },
+  { name: 'Medveember', icon: '🐻', level: 4, hp: 95, atk: 13, def: 10, spd: 6, xpReward: 50, goldReward: 18, locationType: 'zone', minZoneLevel: 3, world: 1 },
   { name: 'Tűz Elementál', icon: '🔥', level: 7, hp: 120, atk: 20, def: 6, spd: 10, xpReward: 100, goldReward: 35, locationType: 'zone', minZoneLevel: 7, world: 1 },
+  { name: 'Szellem', icon: '👻', level: 6, hp: 70, atk: 18, def: 2, spd: 18, xpReward: 75, goldReward: 25, locationType: 'zone', minZoneLevel: 5, world: 1 },
+  { name: 'Orc Harcvezér', icon: '👹', level: 6, hp: 110, atk: 16, def: 11, spd: 7, xpReward: 85, goldReward: 30, locationType: 'zone', minZoneLevel: 5, world: 1 },
+  { name: 'Jég Elem', icon: '❄️', level: 8, hp: 130, atk: 19, def: 8, spd: 9, xpReward: 110, goldReward: 40, locationType: 'zone', minZoneLevel: 7, world: 1 },
+  { name: 'Sötét Lovag', icon: '🏇', level: 9, hp: 160, atk: 23, def: 14, spd: 11, xpReward: 140, goldReward: 50, locationType: 'zone', minZoneLevel: 8, world: 1 },
+  // World 1 - Dungeon
   { name: 'Sötét Varázsló', icon: '🧙‍♂️', level: 4, hp: 70, atk: 16, def: 4, spd: 9, xpReward: 80, goldReward: 30, locationType: 'dungeon', minZoneLevel: 4, world: 1 },
   { name: 'Kőgolem', icon: '🗿', level: 5, hp: 150, atk: 12, def: 18, spd: 3, xpReward: 90, goldReward: 25, locationType: 'dungeon', minZoneLevel: 4, world: 1 },
   { name: 'Vámpír Gróf', icon: '🧛', level: 6, hp: 100, atk: 18, def: 10, spd: 14, xpReward: 120, goldReward: 45, locationType: 'dungeon', minZoneLevel: 6, world: 1 },
+  { name: 'Múmia Úr', icon: '🧟', level: 5, hp: 90, atk: 14, def: 12, spd: 5, xpReward: 85, goldReward: 35, locationType: 'dungeon', minZoneLevel: 4, world: 1 },
+  { name: 'Méregpók Anya', icon: '🕸️', level: 6, hp: 85, atk: 20, def: 6, spd: 12, xpReward: 100, goldReward: 40, locationType: 'dungeon', minZoneLevel: 5, world: 1 },
   { name: 'Lich Király', icon: '👑', level: 8, hp: 200, atk: 22, def: 12, spd: 8, xpReward: 200, goldReward: 80, locationType: 'dungeon', minZoneLevel: 8, world: 1 },
+  { name: 'Démon Vezér', icon: '😈', level: 9, hp: 240, atk: 26, def: 14, spd: 10, xpReward: 250, goldReward: 100, locationType: 'dungeon', minZoneLevel: 8, world: 1 },
+  // World 1 - Raid
   { name: 'Ősi Sárkány', icon: '🐉', level: 10, hp: 500, atk: 35, def: 20, spd: 12, xpReward: 500, goldReward: 200, locationType: 'raid', minZoneLevel: 8, world: 1 },
 
-  // World 2 
+  // World 2 - Zone
   { name: 'Démoni Skorpió', icon: '🦂', level: 6, hp: 90, atk: 18, def: 8, spd: 14, xpReward: 80, goldReward: 30, locationType: 'zone', minZoneLevel: 5, world: 2 },
   { name: 'Jég Óriás', icon: '🧊', level: 8, hp: 180, atk: 22, def: 16, spd: 5, xpReward: 130, goldReward: 50, locationType: 'zone', minZoneLevel: 8, world: 2 },
   { name: 'Lávakobold', icon: '👹', level: 7, hp: 100, atk: 24, def: 6, spd: 16, xpReward: 110, goldReward: 40, locationType: 'zone', minZoneLevel: 5, world: 2 },
+  { name: 'Pokol Kutya', icon: '🐕‍🦺', level: 6, hp: 75, atk: 20, def: 5, spd: 20, xpReward: 70, goldReward: 28, locationType: 'zone', minZoneLevel: 5, world: 2 },
+  { name: 'Kristály Golem', icon: '💎', level: 8, hp: 200, atk: 18, def: 22, spd: 4, xpReward: 140, goldReward: 55, locationType: 'zone', minZoneLevel: 7, world: 2 },
+  { name: 'Lidérc', icon: '🦇', level: 7, hp: 85, atk: 22, def: 4, spd: 22, xpReward: 95, goldReward: 35, locationType: 'zone', minZoneLevel: 6, world: 2 },
+  { name: 'Méregtoll Hárpia', icon: '🦅', level: 9, hp: 140, atk: 26, def: 10, spd: 19, xpReward: 160, goldReward: 60, locationType: 'zone', minZoneLevel: 8, world: 2 },
+  { name: 'Magma Óriás', icon: '🌋', level: 10, hp: 220, atk: 30, def: 18, spd: 6, xpReward: 200, goldReward: 80, locationType: 'zone', minZoneLevel: 9, world: 2 },
+  // World 2 - Dungeon
   { name: 'Csontváz Mágus', icon: '☠️', level: 7, hp: 85, atk: 25, def: 5, spd: 12, xpReward: 100, goldReward: 40, locationType: 'dungeon', minZoneLevel: 5, world: 2 },
   { name: 'Árnyék Démon', icon: '😈', level: 8, hp: 160, atk: 28, def: 12, spd: 15, xpReward: 150, goldReward: 60, locationType: 'dungeon', minZoneLevel: 6, world: 2 },
   { name: 'Jég Sárkány', icon: '🐲', level: 9, hp: 250, atk: 30, def: 18, spd: 10, xpReward: 250, goldReward: 100, locationType: 'dungeon', minZoneLevel: 8, world: 2 },
   { name: 'Elemi Titán', icon: '⚡', level: 10, hp: 300, atk: 35, def: 15, spd: 12, xpReward: 300, goldReward: 120, locationType: 'dungeon', minZoneLevel: 8, world: 2 },
   { name: 'Véres Gladiátor', icon: '🗡️', level: 8, hp: 200, atk: 32, def: 14, spd: 18, xpReward: 200, goldReward: 80, locationType: 'dungeon', minZoneLevel: 5, world: 2 },
+  { name: 'Halál Angyala', icon: '👼', level: 10, hp: 280, atk: 33, def: 16, spd: 16, xpReward: 280, goldReward: 110, locationType: 'dungeon', minZoneLevel: 9, world: 2 },
+  { name: 'Csonttrón Őr', icon: '💀', level: 9, hp: 230, atk: 27, def: 20, spd: 8, xpReward: 220, goldReward: 90, locationType: 'dungeon', minZoneLevel: 7, world: 2 },
+  // World 2 - Raid
   { name: 'Pokol Sárkány', icon: '🐲', level: 12, hp: 800, atk: 50, def: 25, spd: 14, xpReward: 800, goldReward: 350, locationType: 'raid', minZoneLevel: 10, world: 2 },
+  { name: 'Örök Démonlord', icon: '👿', level: 15, hp: 1200, atk: 60, def: 30, spd: 16, xpReward: 1200, goldReward: 500, locationType: 'raid', minZoneLevel: 12, world: 2 },
 ];
 
 // ---- SET BONUSES ----

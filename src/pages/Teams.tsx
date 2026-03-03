@@ -70,7 +70,7 @@ const Teams = () => {
     if (!charRes.data) return;
     setCharacter(charRes.data as unknown as GameCharacter);
 
-    const locRes = await supabase.from('locations').select('*').in('type', ['dungeon', 'raid']);
+    const locRes = await supabase.from('locations').select('*').in('type', ['zone', 'dungeon', 'raid']);
     if (locRes.data) setLocations(locRes.data as GameLocation[]);
 
     const myMem = await supabase.from('team_members').select('*').eq('user_id', user!.id);
