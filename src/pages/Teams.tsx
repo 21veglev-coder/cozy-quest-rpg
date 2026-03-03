@@ -70,7 +70,7 @@ const Teams = () => {
     if (!charRes.data) return;
     setCharacter(charRes.data as unknown as GameCharacter);
 
-    const locRes = await supabase.from('locations').select('*').in('type', ['dungeon', 'raid']);
+    const locRes = await supabase.from('locations').select('*').in('type', ['zone', 'dungeon', 'raid']);
     if (locRes.data) setLocations(locRes.data as GameLocation[]);
 
     const myMem = await supabase.from('team_members').select('*').eq('user_id', user!.id);
@@ -105,10 +105,19 @@ const Teams = () => {
     setMyTeamMembers(memRes.data.map(m => ({ ...m, char: charMap.get(m.character_id) as any })));
   };
 
+  const getMaxSize = (locId: string | null) => {
+    if (!locId) return 3;
+    const loc = locations.find(l => l.id === locId);
+    if (!loc) return 3;
+    if (loc.type === 'dungeon' || loc.type === 'raid') return 5;
+    return 3; // zone = max 3
+  };
+
   const createTeam = async () => {
     if (!character || !teamName.trim()) return;
+    const maxSize = getMaxSize(selectedLoc || null);
     const { data, error } = await supabase.from('teams').insert({
-      name: teamName.trim(), leader_id: user!.id, target_location_id: selectedLoc || null,
+      name: teamName.trim(), leader_id: user!.id, target_location_id: selectedLoc || null, max_size: maxSize,
     }).select().single();
     if (error) { toast.error(error.message); return; }
     await supabase.from('team_members').insert({ team_id: data.id, user_id: user!.id, character_id: character.id });
@@ -144,11 +153,16 @@ const Teams = () => {
     setMyTeam(null); setMyTeamMembers([]); loadData();
   };
 
-  const startDungeon = async () => {
+  const startMission = async () => {
     if (!myTeam || !myTeam.target_location_id) return;
     if (!myTeamMembers.every(m => m.ready)) { toast.error('Nem mindenki kész!'); return; }
     await supabase.from('teams').update({ status: 'in_progress' }).eq('id', myTeam.id);
-    navigate(`/dungeon/${myTeam.target_location_id}`);
+    const loc = locations.find(l => l.id === myTeam.target_location_id);
+    if (loc?.type === 'zone') {
+      navigate(`/combat/${myTeam.target_location_id}`);
+    } else {
+      navigate(`/dungeon/${myTeam.target_location_id}`);
+    }
   };
 
   // Invite functions
@@ -304,7 +318,7 @@ const Teams = () => {
                 {isReady ? '✅ Kész' : '⏳ Kész Jelzés'}
               </Button>
               {myTeam.leader_id === user!.id && (
-                <Button className="flex-1 font-display" onClick={startDungeon}
+                <Button className="flex-1 font-display" onClick={startMission}
                   disabled={!myTeamMembers.every(m => m.ready) || myTeamMembers.length < 2}>
                   <Swords className="w-4 h-4 mr-1" /> Indulás!
                 </Button>
@@ -355,11 +369,17 @@ const Teams = () => {
                     placeholder="Csapat neve..." value={teamName} onChange={e => setTeamName(e.target.value)} maxLength={30} />
                   <select className="w-full bg-secondary border border-border rounded px-3 py-2 text-sm text-foreground"
                     value={selectedLoc} onChange={e => setSelectedLoc(e.target.value)}>
-                    <option value="">Válassz célpontot...</option>
+                    <option value="">Válassz célpontot (zone: max 3, dungeon/raid: max 5)...</option>
                     {locations.map(loc => (
-                      <option key={loc.id} value={loc.id}>{loc.icon} {loc.name} (W{loc.world}, Lv.{loc.level_req})</option>
+                      <option key={loc.id} value={loc.id}>{loc.icon} {loc.name} ({loc.type === 'zone' ? 'Harc' : loc.type === 'dungeon' ? 'Dungeon' : 'Raid'}, W{loc.world}, Lv.{loc.level_req})</option>
                     ))}
                   </select>
+                  {selectedLoc && (
+                    <p className="text-xs text-muted-foreground font-display">
+                      Max csapatméret: {getMaxSize(selectedLoc)} fő
+                      ({locations.find(l => l.id === selectedLoc)?.type === 'zone' ? '🗺️ Sima harc' : locations.find(l => l.id === selectedLoc)?.type === 'dungeon' ? '🏰 Dungeon' : '⚔️ Raid'})
+                    </p>
+                  )}
                   <div className="flex gap-2">
                     <Button className="flex-1 font-display" onClick={createTeam} disabled={!teamName.trim()}>Létrehozás</Button>
                     <Button variant="outline" className="font-display" onClick={() => setCreating(false)}>Mégse</Button>
