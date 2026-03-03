@@ -13,6 +13,7 @@ import WorldMap from "./pages/WorldMap";
 import Combat from "./pages/Combat";
 import Dungeon from "./pages/Dungeon";
 import Perks from "./pages/Perks";
+import Prestige from "./pages/Prestige";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/combat/:locationId?" element={<Combat />} />
             <Route path="/dungeon/:locationId" element={<Dungeon />} />
             <Route path="/perks" element={<Perks />} />
+            <Route path="/prestige" element={<Prestige />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

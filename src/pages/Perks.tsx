@@ -45,8 +45,13 @@ const Perks = () => {
     loadData();
   };
 
-  const availablePerks = PERKS.filter(p => !p.classReq || p.classReq === character?.class);
-  const classPerks = availablePerks.filter(p => p.classReq);
+  const availablePerks = PERKS.filter(p => {
+    if (p.classReq && p.classReq !== character?.class) return false;
+    if (p.subclassReq && p.subclassReq !== character?.subclass) return false;
+    return true;
+  });
+  const baseClassPerks = availablePerks.filter(p => p.classReq && !p.subclassReq);
+  const subclassPerks = availablePerks.filter(p => p.subclassReq);
   const universalPerks = availablePerks.filter(p => !p.classReq);
 
   if (!character) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="text-gold font-display animate-pulse-glow">Betöltés...</div></div>;
@@ -68,7 +73,7 @@ const Perks = () => {
         {/* Class Perks */}
         <h2 className="font-display text-sm text-gold mb-3">Osztály Képességek</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-          {classPerks.map(perk => {
+          {baseClassPerks.map(perk => {
             const tier = getOwnedTier(perk.id);
             const maxed = tier >= perk.maxTier;
             return (
@@ -97,6 +102,43 @@ const Perks = () => {
             );
           })}
         </div>
+
+        {/* Subclass Perks */}
+        {subclassPerks.length > 0 && (
+          <>
+            <h2 className="font-display text-sm text-shadow mb-3">🎭 Subclass Képességek</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+              {subclassPerks.map(perk => {
+                const tier = getOwnedTier(perk.id);
+                const maxed = tier >= perk.maxTier;
+                return (
+                  <motion.div key={perk.id} whileHover={{ scale: 1.02 }}
+                    className={`rpg-panel p-4 ${tier > 0 ? 'border-glow' : ''}`}>
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-2xl">{perk.icon}</span>
+                      <div>
+                        <p className="font-display text-sm font-semibold text-foreground">{perk.name}</p>
+                        <p className="text-[10px] text-muted-foreground">{perk.description}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-1 mb-3">
+                      {Array.from({ length: perk.maxTier }, (_, i) => (
+                        <div key={i} className={`h-1.5 flex-1 rounded-full ${i < tier ? 'bg-shadow' : 'bg-secondary'}`} />
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-muted-foreground">{tier}/{perk.maxTier}</span>
+                      <Button size="sm" disabled={maxed || character.perk_points <= 0}
+                        onClick={() => upgradePerk(perk)} className="text-[10px] font-display h-7 px-3">
+                        {maxed ? 'MAX' : '⭐ Fejlesztés'}
+                      </Button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </>
+        )}
 
         {/* Universal Perks */}
         <h2 className="font-display text-sm text-gold mb-3">Általános Képességek</h2>

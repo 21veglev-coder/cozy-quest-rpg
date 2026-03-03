@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
-import { GameCharacter, CLASSES, InventoryItem } from '@/types/game';
+import { GameCharacter, CLASSES, SUBCLASSES, InventoryItem } from '@/types/game';
 import ChatPanel from '@/components/ChatPanel';
 import CharacterSheet from '@/components/CharacterSheet';
 import InventoryPanel from '@/components/InventoryPanel';
@@ -65,6 +65,16 @@ const Lobby = () => {
   const toggleEquip = async (itemId: string) => {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
+    
+    if (!item.equipped && item.type !== 'potion' && item.type !== 'quest') {
+      // Unequip any item in the same slot first
+      const sameSlot = items.find(i => i.equipped && i.type === item.type);
+      if (sameSlot) {
+        await supabase.from('inventory_items').update({ equipped: false }).eq('id', sameSlot.id);
+        setItems(prev => prev.map(i => i.id === sameSlot.id ? { ...i, equipped: false } : i));
+      }
+    }
+    
     await supabase.from('inventory_items').update({ equipped: !item.equipped }).eq('id', itemId);
     setItems(prev => prev.map(i => i.id === itemId ? { ...i, equipped: !i.equipped } : i));
   };
@@ -118,6 +128,7 @@ const Lobby = () => {
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {onlinePlayers.map(player => {
                 const cls = CLASSES.find(c => c.id === player.class);
+                const sub = SUBCLASSES.find(s => s.id === (player as any).subclass);
                 return (
                   <motion.div
                     key={player.id}
@@ -125,7 +136,7 @@ const Lobby = () => {
                     animate={{ opacity: 1, x: 0 }}
                     className="flex items-center gap-2 text-sm"
                   >
-                    <span className="text-base">{cls?.icon}</span>
+                    <span className="text-base">{sub?.icon || cls?.icon}</span>
                     <span className="text-foreground/80 truncate">{player.name}</span>
                     <span className="text-xs text-muted-foreground ml-auto">Lv.{player.level}</span>
                   </motion.div>
@@ -159,6 +170,9 @@ const Lobby = () => {
               </Button>
               <Button variant="outline" className="font-display border-border hover:border-gold/50 hover:text-gold" onClick={() => navigate('/perks')}>
                 <Star className="w-4 h-4 mr-1" /> Képességek
+              </Button>
+              <Button variant="outline" className="font-display border-border hover:border-gold/50 hover:text-gold" onClick={() => navigate('/prestige')}>
+                ⭐ Prestige
               </Button>
             </div>
           </motion.div>
