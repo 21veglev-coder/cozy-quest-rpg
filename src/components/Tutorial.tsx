@@ -5,7 +5,7 @@ import { ChevronRight, X } from 'lucide-react';
 
 const STEPS = [
   {
-    title: 'Üdvözlünk a Realm of Shadows-ban!',
+    title: 'Üdvözlünk a Cozy Quest-ben!',
     content: 'Ez egy multiplayer RPG, ahol az osztálytársaiddal kalandhatsz együtt. Hozz létre egy karaktert és csatlakozz a lobbihoz!',
     icon: '⚔️',
   },

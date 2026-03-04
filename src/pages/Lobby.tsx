@@ -108,7 +108,7 @@ const Lobby = () => {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="border-b border-border p-4 flex items-center justify-between">
-        <h1 className="font-display text-lg text-gold text-glow-gold">⚔️ Realm of Shadows</h1>
+        <h1 className="font-display text-lg text-gold text-glow-gold">⚔️ Cozy Quest</h1>
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => setShowTutorial(true)} className="text-muted-foreground hover:text-gold">
             <BookOpen className="w-4 h-4 mr-1" /> Tutorial
