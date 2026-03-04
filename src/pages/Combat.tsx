@@ -288,7 +288,9 @@ const Combat = () => {
     let droppedItem: string | null = null;
     if (result === 'win') {
       const comboBonus = Math.floor(newCombo * 2);
-      newLog.push(`🏆 Győzelem! +${enemy.xpReward} XP, +${enemy.goldReward + comboBonus}💰 ${comboBonus > 0 ? `(combo bónusz: +${comboBonus}💰)` : ''}`);
+      const xpMult = character ? getXpMultiplier(character.prestige) : 1;
+      const scaledXp = Math.floor(enemy.xpReward * xpMult);
+      newLog.push(`🏆 Győzelem! +${scaledXp} XP${xpMult > 1 ? ` (×${xpMult.toFixed(1)})` : ''}, +${enemy.goldReward + comboBonus}💰 ${comboBonus > 0 ? `(combo bónusz: +${comboBonus}💰)` : ''}`);
       const loot = rollLoot(enemy.level, enemy.locationType);
       if (loot) {
         const saved = await saveLoot(loot, character);
