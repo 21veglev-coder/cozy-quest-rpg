@@ -380,10 +380,14 @@ const Combat = () => {
   const applyRewards = async (e: EnemyDef, comboCount: number) => {
     if (!character) return;
     const comboBonus = Math.floor(comboCount * 2);
-    const newXp = character.xp + e.xpReward;
+    const xpMult = getXpMultiplier(character.prestige);
+    const scaledXp = Math.floor(e.xpReward * xpMult);
+    const maxLvl = getMaxLevel(character.prestige);
+    const newXp = character.xp + scaledXp;
     const xpNeeded = character.level * 100;
-    const levelUp = newXp >= xpNeeded;
-    const updates: any = { xp: levelUp ? newXp - xpNeeded : newXp, gold: character.gold + e.goldReward + comboBonus };
+    const canLevelUp = character.level < maxLvl;
+    const levelUp = canLevelUp && newXp >= xpNeeded;
+    const updates: any = { xp: levelUp ? newXp - xpNeeded : (canLevelUp ? newXp : Math.min(newXp, xpNeeded - 1)), gold: character.gold + e.goldReward + comboBonus };
     if (levelUp) {
       updates.level = character.level + 1;
       updates.perk_points = character.perk_points + 1;
@@ -397,7 +401,7 @@ const Combat = () => {
     await supabase.from('combat_log').insert({
       character_id: character.id, location_id: locationId || null,
       enemy_name: e.name, enemy_level: e.level, result: 'win',
-      xp_gained: e.xpReward, gold_gained: e.goldReward + comboBonus,
+      xp_gained: scaledXp, gold_gained: e.goldReward + comboBonus,
     });
   };
 

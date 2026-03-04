@@ -86,8 +86,17 @@ export const ITEM_SLOTS: { id: ItemSlot; name: string; icon: string }[] = [
   { id: 'necklace', name: 'Nyaklánc', icon: '📿' },
 ];
 
-export const PRESTIGE_LEVEL_REQ = 50;
+// Dynamic prestige: starts at 25, +5 per prestige
+export const PRESTIGE_LEVEL_REQ = 25; // Base level for first prestige
 export const PRESTIGE_SUBCLASS_REQ = 1;
+
+export const getMaxLevel = (prestige: number): number => PRESTIGE_LEVEL_REQ + prestige * 5;
+
+// XP multiplier with diminishing returns: ~1x at P0, ~1.8x at P5, ~3x at P20, caps ~5x
+export const getXpMultiplier = (prestige: number): number => {
+  if (prestige <= 0) return 1;
+  return 1 + (0.2 * prestige) / (1 + 0.05 * prestige);
+};
 
 export interface GameCharacter {
   id: string;
