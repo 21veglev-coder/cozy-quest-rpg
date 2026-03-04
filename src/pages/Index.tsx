@@ -41,7 +41,7 @@ const Index = () => {
         </div>
 
         <h1 className="text-5xl md:text-7xl font-display font-bold text-foreground text-glow-gold mb-4">
-          Realm of Shadows
+          Cozy Quest
         </h1>
         <p className="text-lg text-muted-foreground mb-8 max-w-md mx-auto">
           Multiplayer RPG kaland az osztályodnak. Válassz osztályt, gyűjts tárgyakat, harcolj együtt.
