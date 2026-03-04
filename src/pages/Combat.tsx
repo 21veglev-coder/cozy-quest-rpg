@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
-import { GameCharacter, InventoryItem, EnemyDef, ENEMIES, GameLocation, SET_BONUSES, SKILLS, SkillDef, rollLoot, RARITY_COLORS, getEnemyAction, EnemyAbility } from '@/types/game';
+import { GameCharacter, InventoryItem, EnemyDef, ENEMIES, GameLocation, SET_BONUSES, SKILLS, SkillDef, rollLoot, RARITY_COLORS, getEnemyAction, EnemyAbility, getXpMultiplier, getMaxLevel } from '@/types/game';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Swords, Dice6, Heart, Zap, Shield, Flame } from 'lucide-react';
 import { toast } from 'sonner';
@@ -288,7 +288,9 @@ const Combat = () => {
     let droppedItem: string | null = null;
     if (result === 'win') {
       const comboBonus = Math.floor(newCombo * 2);
-      newLog.push(`🏆 Győzelem! +${enemy.xpReward} XP, +${enemy.goldReward + comboBonus}💰 ${comboBonus > 0 ? `(combo bónusz: +${comboBonus}💰)` : ''}`);
+      const xpMult = character ? getXpMultiplier(character.prestige) : 1;
+      const scaledXp = Math.floor(enemy.xpReward * xpMult);
+      newLog.push(`🏆 Győzelem! +${scaledXp} XP${xpMult > 1 ? ` (×${xpMult.toFixed(1)})` : ''}, +${enemy.goldReward + comboBonus}💰 ${comboBonus > 0 ? `(combo bónusz: +${comboBonus}💰)` : ''}`);
       const loot = rollLoot(enemy.level, enemy.locationType);
       if (loot) {
         const saved = await saveLoot(loot, character);
@@ -380,10 +382,14 @@ const Combat = () => {
   const applyRewards = async (e: EnemyDef, comboCount: number) => {
     if (!character) return;
     const comboBonus = Math.floor(comboCount * 2);
-    const newXp = character.xp + e.xpReward;
+    const xpMult = getXpMultiplier(character.prestige);
+    const scaledXp = Math.floor(e.xpReward * xpMult);
+    const maxLvl = getMaxLevel(character.prestige);
+    const newXp = character.xp + scaledXp;
     const xpNeeded = character.level * 100;
-    const levelUp = newXp >= xpNeeded;
-    const updates: any = { xp: levelUp ? newXp - xpNeeded : newXp, gold: character.gold + e.goldReward + comboBonus };
+    const canLevelUp = character.level < maxLvl;
+    const levelUp = canLevelUp && newXp >= xpNeeded;
+    const updates: any = { xp: levelUp ? newXp - xpNeeded : (canLevelUp ? newXp : Math.min(newXp, xpNeeded - 1)), gold: character.gold + e.goldReward + comboBonus };
     if (levelUp) {
       updates.level = character.level + 1;
       updates.perk_points = character.perk_points + 1;
@@ -397,7 +403,7 @@ const Combat = () => {
     await supabase.from('combat_log').insert({
       character_id: character.id, location_id: locationId || null,
       enemy_name: e.name, enemy_level: e.level, result: 'win',
-      xp_gained: e.xpReward, gold_gained: e.goldReward + comboBonus,
+      xp_gained: scaledXp, gold_gained: e.goldReward + comboBonus,
     });
   };
 

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
-import { GameCharacter, CLASSES, SUBCLASSES, SubclassInfo, PRESTIGE_LEVEL_REQ, PRESTIGE_SUBCLASS_REQ } from '@/types/game';
+import { GameCharacter, CLASSES, SUBCLASSES, SubclassInfo, PRESTIGE_LEVEL_REQ, PRESTIGE_SUBCLASS_REQ, getMaxLevel, getXpMultiplier } from '@/types/game';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -27,10 +27,14 @@ const Prestige = () => {
     setLoading(false);
   };
 
-  const canPrestige = character && character.level >= PRESTIGE_LEVEL_REQ;
+  const maxLevel = character ? getMaxLevel(character.prestige) : PRESTIGE_LEVEL_REQ;
+  const xpMult = character ? getXpMultiplier(character.prestige) : 1;
+  const canPrestige = character && character.level >= maxLevel;
   const canChooseSubclass = character && character.prestige >= PRESTIGE_SUBCLASS_REQ && !character.subclass;
   const availableSubclasses = character ? SUBCLASSES.filter(s => s.parentClass === character.class) : [];
   const cls = character ? CLASSES.find(c => c.id === character.class) : null;
+  const nextMaxLevel = character ? getMaxLevel(character.prestige + 1) : 30;
+  const nextXpMult = character ? getXpMultiplier(character.prestige + 1) : 1;
 
   const handlePrestige = async () => {
     if (!character || !canPrestige) return;
@@ -102,8 +106,11 @@ const Prestige = () => {
         </Button>
 
         <h1 className="text-3xl font-display font-bold text-center text-glow-gold mb-2">⭐ Prestige Rendszer</h1>
-        <p className="text-center text-muted-foreground text-sm mb-8">
-          Prestige: <span className="text-gold font-bold">{character.prestige}</span> · Level: <span className="text-foreground">{character.level}/{PRESTIGE_LEVEL_REQ}</span>
+        <p className="text-center text-muted-foreground text-sm mb-4">
+          Prestige: <span className="text-gold font-bold">{character.prestige}</span> · Level: <span className="text-foreground">{character.level}/{maxLevel}</span>
+        </p>
+        <p className="text-center text-muted-foreground text-xs mb-8">
+          XP szorzó: <span className="text-gold font-bold">×{xpMult.toFixed(2)}</span>
         </p>
 
         {/* Current Subclass */}
@@ -119,7 +126,8 @@ const Prestige = () => {
         <div className="rpg-panel-gold p-6 mb-6">
           <h2 className="font-display text-lg text-gold mb-3">🌟 Prestige</h2>
           <p className="text-sm text-muted-foreground mb-4">
-            Elérd a {PRESTIGE_LEVEL_REQ}. szintet, és Prestige-elj! A szinted visszaáll 1-re, de bónusz perk pontokat kapsz.
+            Elérd a {maxLevel}. szintet, és Prestige-elj! A szinted visszaáll 1-re, de bónusz perk pontokat kapsz.
+            <br />Max level: {maxLevel} → {nextMaxLevel} · XP szorzó: ×{xpMult.toFixed(2)} → ×{nextXpMult.toFixed(2)}
             <br />Prestige 1 után subclass-t választhatsz!
           </p>
 
@@ -128,11 +136,11 @@ const Prestige = () => {
               <div className="h-3 bg-secondary rounded-full overflow-hidden mb-2">
                 <motion.div
                   className="h-full bg-gold rounded-full"
-                  style={{ width: `${(character.level / PRESTIGE_LEVEL_REQ) * 100}%` }}
+                  style={{ width: `${(character.level / maxLevel) * 100}%` }}
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                Még <span className="text-gold font-bold">{PRESTIGE_LEVEL_REQ - character.level}</span> szint a Prestige-ig
+                Még <span className="text-gold font-bold">{maxLevel - character.level}</span> szint a Prestige-ig
               </p>
             </div>
           )}
