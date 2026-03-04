@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
-import { GameCharacter, InventoryItem, EnemyDef, ENEMIES, GameLocation, SET_BONUSES, SKILLS, SkillDef, rollLoot, RARITY_COLORS, getEnemyAction, EnemyAbility } from '@/types/game';
+import { GameCharacter, InventoryItem, EnemyDef, ENEMIES, GameLocation, SET_BONUSES, SKILLS, SkillDef, rollLoot, RARITY_COLORS, getEnemyAction, EnemyAbility, getXpMultiplier, getMaxLevel } from '@/types/game';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Swords, Dice6, Heart, Zap, Shield, Flame } from 'lucide-react';
 import { toast } from 'sonner';

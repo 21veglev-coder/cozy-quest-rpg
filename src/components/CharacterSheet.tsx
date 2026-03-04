@@ -1,4 +1,4 @@
-import { GameCharacter, CLASSES, SUBCLASSES, PRESTIGE_LEVEL_REQ } from '@/types/game';
+import { GameCharacter, CLASSES, SUBCLASSES, getMaxLevel } from '@/types/game';
 import { motion } from 'framer-motion';
 
 interface CharacterSheetProps {
