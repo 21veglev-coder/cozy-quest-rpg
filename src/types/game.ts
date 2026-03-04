@@ -71,8 +71,8 @@ export const SUBCLASSES: SubclassInfo[] = [
   { id: 'shadowblade', name: 'Árnypenge', icon: '🌑', description: 'Árnyékból támad, méreggel öl.', color: 'text-shadow', parentClass: 'rogue', statBonuses: { atk: 8, spd: 10, crit: 12, agi: 10, int: 5 } },
 ];
 
-// Item slot types (WoW-style 10 slots)
-export type ItemSlot = 'weapon' | 'helmet' | 'shoulders' | 'chest' | 'legs' | 'boots' | 'gloves' | 'ring' | 'necklace' | 'potion' | 'quest';
+// Item slot types (WoW-style 10 slots + material)
+export type ItemSlot = 'weapon' | 'helmet' | 'shoulders' | 'chest' | 'legs' | 'boots' | 'gloves' | 'ring' | 'necklace' | 'potion' | 'quest' | 'material';
 
 export const ITEM_SLOTS: { id: ItemSlot; name: string; icon: string }[] = [
   { id: 'weapon', name: 'Fegyver', icon: '⚔️' },
@@ -559,35 +559,56 @@ export interface LootDrop {
 }
 
 export const LOOT_TABLE: LootDrop[] = [
-  // Common drops
-  { name: 'Goblin Tőr', type: 'weapon', rarity: 'common', icon: '🔪', description: 'Goblinok fegyvere.', atk: 4, def: 0, spd: 1, hp_bonus: 0, mp_bonus: 0, crit_chance: 2, set_name: null, dropChance: 30, minEnemyLevel: 1 },
-  { name: 'Farkas Bőr Sapka', type: 'helmet', rarity: 'common', icon: '🐺', description: 'Farkas bundából.', atk: 0, def: 3, spd: 1, hp_bonus: 5, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 25, minEnemyLevel: 2 },
-  { name: 'Pók Selyem Kesztyű', type: 'gloves', rarity: 'uncommon', icon: '🕸️', description: 'Ragacsos de erős.', atk: 2, def: 2, spd: 2, hp_bonus: 0, mp_bonus: 0, crit_chance: 3, set_name: null, dropChance: 20, minEnemyLevel: 3 },
-  { name: 'Csont Gyűrű', type: 'ring', rarity: 'uncommon', icon: '💀', description: 'Csontból faragva.', atk: 3, def: 1, spd: 0, hp_bonus: 5, mp_bonus: 5, crit_chance: 2, set_name: null, dropChance: 15, minEnemyLevel: 5 },
-  // Rare drops
-  { name: 'Tűz Kard', type: 'weapon', rarity: 'rare', icon: '🔥', description: 'Lángoló penge.', atk: 12, def: 0, spd: 2, hp_bonus: 0, mp_bonus: 0, crit_chance: 5, set_name: 'Tűz', dropChance: 12, minEnemyLevel: 7 },
-  { name: 'Tűz Vállvédő', type: 'shoulders', rarity: 'rare', icon: '🔥', description: 'Forró vállvédő.', atk: 3, def: 5, spd: 0, hp_bonus: 10, mp_bonus: 5, crit_chance: 0, set_name: 'Tűz', dropChance: 10, minEnemyLevel: 7 },
-  { name: 'Vámpír Köpeny', type: 'chest', rarity: 'rare', icon: '🧛', description: 'Életerő szívás.', atk: 5, def: 7, spd: 3, hp_bonus: 20, mp_bonus: 0, crit_chance: 3, set_name: null, dropChance: 10, minEnemyLevel: 6 },
-  { name: 'Kő Csizma', type: 'boots', rarity: 'rare', icon: '🗿', description: 'Nehéz de erős.', atk: 0, def: 10, spd: -2, hp_bonus: 15, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 10, minEnemyLevel: 5 },
-  // Epic drops
-  { name: 'Sárkány Kard', type: 'weapon', rarity: 'epic', icon: '🐉', description: 'Sárkány fogából.', atk: 20, def: 3, spd: 3, hp_bonus: 10, mp_bonus: 0, crit_chance: 8, set_name: 'Legenda', dropChance: 8, minEnemyLevel: 8 },
-  { name: 'Sárkány Sisak', type: 'helmet', rarity: 'epic', icon: '🐉', description: 'Sárkány pikkelyből.', atk: 5, def: 12, spd: 0, hp_bonus: 30, mp_bonus: 0, crit_chance: 3, set_name: 'Legenda', dropChance: 6, minEnemyLevel: 8 },
-  { name: 'Lich Nyaklánc', type: 'necklace', rarity: 'epic', icon: '👑', description: 'Sötét mágia.', atk: 10, def: 0, spd: 2, hp_bonus: 0, mp_bonus: 30, crit_chance: 5, set_name: null, dropChance: 7, minEnemyLevel: 8 },
-  // W2 drops
-  { name: 'Démoni Karmok', type: 'gloves', rarity: 'epic', icon: '😈', description: 'Démoni erő.', atk: 8, def: 3, spd: 4, hp_bonus: 0, mp_bonus: 0, crit_chance: 8, set_name: null, dropChance: 10, minEnemyLevel: 8 },
-  { name: 'Jég Korona', type: 'helmet', rarity: 'epic', icon: '🧊', description: 'Fagyos fejfedő.', atk: 4, def: 10, spd: 0, hp_bonus: 20, mp_bonus: 20, crit_chance: 2, set_name: null, dropChance: 8, minEnemyLevel: 8 },
-  { name: 'Pokol Nadrág', type: 'legs', rarity: 'epic', icon: '🔥', description: 'Pokoli védelem.', atk: 3, def: 12, spd: 2, hp_bonus: 25, mp_bonus: 0, crit_chance: 3, set_name: null, dropChance: 8, minEnemyLevel: 10 },
+  // ---- MATERIALS (high drop chance) ----
+  { name: 'Fa', type: 'material', rarity: 'common', icon: '🪵', description: 'Alapvető nyersanyag.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 50, minEnemyLevel: 1 },
+  { name: 'Kő', type: 'material', rarity: 'common', icon: '🪨', description: 'Kemény kőzet.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 45, minEnemyLevel: 1 },
+  { name: 'Vasérc', type: 'material', rarity: 'uncommon', icon: '⛏️', description: 'Fém nyersanyag.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 35, minEnemyLevel: 3 },
+  { name: 'Bőr', type: 'material', rarity: 'common', icon: '🧶', description: 'Állati bőr.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 40, minEnemyLevel: 2 },
+  { name: 'Mágikus Por', type: 'material', rarity: 'uncommon', icon: '✨', description: 'Varázslatos por.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 30, minEnemyLevel: 4 },
+  { name: 'Ezüstérc', type: 'material', rarity: 'rare', icon: '🥈', description: 'Ritka fém.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 20, minEnemyLevel: 5 },
+  { name: 'Aranyérc', type: 'material', rarity: 'rare', icon: '🥇', description: 'Értékes fém.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 15, minEnemyLevel: 7 },
+  { name: 'Sárkány Pikkely', type: 'material', rarity: 'epic', icon: '🐉', description: 'Nagyon ritka anyag.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 10, minEnemyLevel: 8 },
+  { name: 'Démoni Esszencia', type: 'material', rarity: 'epic', icon: '😈', description: 'Sötét energia.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 8, minEnemyLevel: 10 },
+
+  // ---- GEAR (reduced drop chances) ----
+  // Common gear
+  { name: 'Goblin Tőr', type: 'weapon', rarity: 'common', icon: '🔪', description: 'Goblinok fegyvere.', atk: 4, def: 0, spd: 1, hp_bonus: 0, mp_bonus: 0, crit_chance: 2, set_name: null, dropChance: 12, minEnemyLevel: 1 },
+  { name: 'Farkas Bőr Sapka', type: 'helmet', rarity: 'common', icon: '🐺', description: 'Farkas bundából.', atk: 0, def: 3, spd: 1, hp_bonus: 5, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 10, minEnemyLevel: 2 },
+  // Uncommon gear
+  { name: 'Pók Selyem Kesztyű', type: 'gloves', rarity: 'uncommon', icon: '🕸️', description: 'Ragacsos de erős.', atk: 2, def: 2, spd: 2, hp_bonus: 0, mp_bonus: 0, crit_chance: 3, set_name: null, dropChance: 8, minEnemyLevel: 3 },
+  { name: 'Csont Gyűrű', type: 'ring', rarity: 'uncommon', icon: '💀', description: 'Csontból faragva.', atk: 3, def: 1, spd: 0, hp_bonus: 5, mp_bonus: 5, crit_chance: 2, set_name: null, dropChance: 7, minEnemyLevel: 5 },
+  // Rare gear
+  { name: 'Tűz Kard', type: 'weapon', rarity: 'rare', icon: '🔥', description: 'Lángoló penge.', atk: 12, def: 0, spd: 2, hp_bonus: 0, mp_bonus: 0, crit_chance: 5, set_name: 'Tűz', dropChance: 5, minEnemyLevel: 7 },
+  { name: 'Tűz Vállvédő', type: 'shoulders', rarity: 'rare', icon: '🔥', description: 'Forró vállvédő.', atk: 3, def: 5, spd: 0, hp_bonus: 10, mp_bonus: 5, crit_chance: 0, set_name: 'Tűz', dropChance: 4, minEnemyLevel: 7 },
+  { name: 'Vámpír Köpeny', type: 'chest', rarity: 'rare', icon: '🧛', description: 'Életerő szívás.', atk: 5, def: 7, spd: 3, hp_bonus: 20, mp_bonus: 0, crit_chance: 3, set_name: null, dropChance: 4, minEnemyLevel: 6 },
+  { name: 'Kő Csizma', type: 'boots', rarity: 'rare', icon: '🗿', description: 'Nehéz de erős.', atk: 0, def: 10, spd: -2, hp_bonus: 15, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 4, minEnemyLevel: 5 },
+  // Epic gear
+  { name: 'Sárkány Kard', type: 'weapon', rarity: 'epic', icon: '🐉', description: 'Sárkány fogából.', atk: 20, def: 3, spd: 3, hp_bonus: 10, mp_bonus: 0, crit_chance: 8, set_name: 'Legenda', dropChance: 3, minEnemyLevel: 8 },
+  { name: 'Sárkány Sisak', type: 'helmet', rarity: 'epic', icon: '🐉', description: 'Sárkány pikkelyből.', atk: 5, def: 12, spd: 0, hp_bonus: 30, mp_bonus: 0, crit_chance: 3, set_name: 'Legenda', dropChance: 2, minEnemyLevel: 8 },
+  { name: 'Lich Nyaklánc', type: 'necklace', rarity: 'epic', icon: '👑', description: 'Sötét mágia.', atk: 10, def: 0, spd: 2, hp_bonus: 0, mp_bonus: 30, crit_chance: 5, set_name: null, dropChance: 3, minEnemyLevel: 8 },
+  // W2 gear
+  { name: 'Démoni Karmok', type: 'gloves', rarity: 'epic', icon: '😈', description: 'Démoni erő.', atk: 8, def: 3, spd: 4, hp_bonus: 0, mp_bonus: 0, crit_chance: 8, set_name: null, dropChance: 4, minEnemyLevel: 8 },
+  { name: 'Jég Korona', type: 'helmet', rarity: 'epic', icon: '🧊', description: 'Fagyos fejfedő.', atk: 4, def: 10, spd: 0, hp_bonus: 20, mp_bonus: 20, crit_chance: 2, set_name: null, dropChance: 3, minEnemyLevel: 8 },
+  { name: 'Pokol Nadrág', type: 'legs', rarity: 'epic', icon: '🔥', description: 'Pokoli védelem.', atk: 3, def: 12, spd: 2, hp_bonus: 25, mp_bonus: 0, crit_chance: 3, set_name: null, dropChance: 3, minEnemyLevel: 10 },
   // Legendary (raid only)
-  { name: 'Örök Lángoló Kard', type: 'weapon', rarity: 'legendary', icon: '⚔️', description: 'Legendás fegyver.', atk: 30, def: 5, spd: 5, hp_bonus: 20, mp_bonus: 10, crit_chance: 12, set_name: 'Legenda', dropChance: 5, minEnemyLevel: 10 },
-  { name: 'Sárkányölő Páncél', type: 'chest', rarity: 'legendary', icon: '🐲', description: 'A legerősebb vért.', atk: 10, def: 25, spd: 0, hp_bonus: 60, mp_bonus: 0, crit_chance: 5, set_name: 'Legenda', dropChance: 4, minEnemyLevel: 10 },
+  { name: 'Örök Lángoló Kard', type: 'weapon', rarity: 'legendary', icon: '⚔️', description: 'Legendás fegyver.', atk: 30, def: 5, spd: 5, hp_bonus: 20, mp_bonus: 10, crit_chance: 12, set_name: 'Legenda', dropChance: 2, minEnemyLevel: 10 },
+  { name: 'Sárkányölő Páncél', type: 'chest', rarity: 'legendary', icon: '🐲', description: 'A legerősebb vért.', atk: 10, def: 25, spd: 0, hp_bonus: 60, mp_bonus: 0, crit_chance: 5, set_name: 'Legenda', dropChance: 1, minEnemyLevel: 10 },
 ];
 
 export function rollLoot(enemyLevel: number, locationType: 'zone' | 'dungeon' | 'raid'): LootDrop | null {
   const eligible = LOOT_TABLE.filter(l => enemyLevel >= l.minEnemyLevel);
   if (eligible.length === 0) return null;
-  // Higher drop chance in dungeons/raids
+  // Materials have higher base drop, gear much lower
   const mult = locationType === 'raid' ? 2.0 : locationType === 'dungeon' ? 1.5 : 1.0;
-  for (const loot of eligible.sort((a, b) => a.dropChance - b.dropChance)) {
+  // Try to roll - materials first (higher chance), then gear
+  const materials = eligible.filter(l => l.type === 'material');
+  const gear = eligible.filter(l => l.type !== 'material');
+  // Roll materials (30-50% base chance)
+  for (const loot of materials.sort(() => Math.random() - 0.5)) {
+    if (Math.random() * 100 < loot.dropChance * mult) return loot;
+  }
+  // Roll gear (much lower chance: 1-12%)
+  for (const loot of gear.sort((a, b) => a.dropChance - b.dropChance)) {
     if (Math.random() * 100 < loot.dropChance * mult) return loot;
   }
   return null;
