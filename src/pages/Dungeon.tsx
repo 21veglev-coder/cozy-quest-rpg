@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
-import { GameCharacter, InventoryItem, ENEMIES, EnemyDef, GameLocation, SET_BONUSES, SKILLS, SkillDef, rollLoot } from '@/types/game';
+import { GameCharacter, InventoryItem, ENEMIES, ENEMY_ABILITIES, EnemyDef, GameLocation, SET_BONUSES, SKILLS, SkillDef, rollLoot } from '@/types/game';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Swords, Dice6, Heart, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
