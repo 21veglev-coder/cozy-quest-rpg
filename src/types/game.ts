@@ -335,7 +335,7 @@ export interface EnemyAbility {
 }
 
 // Shared enemy abilities
-const ENEMY_ABILITIES: Record<string, EnemyAbility> = {
+export const ENEMY_ABILITIES: Record<string, EnemyAbility> = {
   heavy_strike: { name: 'Erős Csapás', icon: '💥', chance: 25, type: 'attack', damageMultiplier: 1.8, condition: 'always', description: 'Hatalmas ütés!' },
   enrage: { name: 'Megvadulás', icon: '😤', chance: 80, type: 'buff', selfBuff: { atk: 8, turns: 3 }, condition: 'low_hp', description: 'Az ellenség megvadult!' },
   poison_spit: { name: 'Méreg Köpés', icon: '🤮', chance: 30, type: 'debuff', playerDebuff: { atk: -3, def: -2, spd: 0, turns: 2 }, damage: 5, condition: 'always', description: 'Méreg fröccsen!' },
