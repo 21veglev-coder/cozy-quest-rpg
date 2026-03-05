@@ -93,10 +93,29 @@ const Dungeon = () => {
     );
     if (pool.length === 0) return;
     const isBoss = floor === maxFloors;
+    const isMiniBoss = floor === maxFloors - 1;
     let picked: EnemyDef;
     if (isBoss) {
       picked = pool.reduce((a, b) => a.level > b.level ? a : b);
       picked = { ...picked, hp: Math.floor(picked.hp * 1.5), atk: Math.floor(picked.atk * 1.3), name: `👑 ${picked.name} (Boss)` };
+    } else if (isMiniBoss) {
+      // Mini-boss: second strongest enemy with enhanced stats and extra abilities
+      const sorted = [...pool].sort((a, b) => b.level - a.level);
+      const base = sorted.length > 1 ? sorted[1] : sorted[0];
+      picked = {
+        ...base,
+        hp: Math.floor(base.hp * 1.25),
+        atk: Math.floor(base.atk * 1.15),
+        def: Math.floor(base.def * 1.2),
+        xpReward: Math.floor(base.xpReward * 1.5),
+        goldReward: Math.floor(base.goldReward * 1.5),
+        name: `⚔️ ${base.name} (Mini-Boss)`,
+        abilities: [
+          ...(base.abilities || []),
+          ENEMY_ABILITIES.enrage,
+          ENEMY_ABILITIES.heal_self,
+        ],
+      };
     } else {
       picked = pool[Math.floor(Math.random() * pool.length)];
       picked = { ...picked, hp: picked.hp + floor * 10, atk: picked.atk + floor };
@@ -105,7 +124,8 @@ const Dungeon = () => {
     setEnemyHp(picked.hp);
     setBattleActive(true);
     setBs({ cooldowns: {}, buffs: [], debuffs: [], enemyAtk: picked.atk, enemyDef: picked.def });
-    setLog(prev => [...prev, `--- ${floor}. szint ---`, `${picked.icon} ${picked.name} (Lv.${picked.level}) jelent meg!`]);
+    const floorLabel = isBoss ? '🔥 BOSS SZINT' : isMiniBoss ? '⚔️ MINI-BOSS SZINT' : `${floor}. szint`;
+    setLog(prev => [...prev, `--- ${floorLabel} ---`, `${picked.icon} ${picked.name} (Lv.${picked.level}) jelent meg!`]);
   }, [floor, location, maxFloors]);
 
   useEffect(() => {
