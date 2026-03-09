@@ -92,6 +92,7 @@ const WorldMap = () => {
   // Each sub-zone shows a 2x2 grid (4 map sections)
   const gridSize = 2;
   const canAccessWorld2 = character && character.prestige >= 1 && character.subclass;
+  const canAccessWorld3 = character && character.prestige >= 2 && character.subclass;
   const canAccessSubZone = (idx: number) => {
     if (!character) return false;
     const sz = currentSubZones[idx];
