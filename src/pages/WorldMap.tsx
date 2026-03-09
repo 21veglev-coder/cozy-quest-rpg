@@ -35,6 +35,12 @@ const SUB_ZONES: Record<number, { id: string; name: string; levelRange: [number,
     { id: '2.3', name: 'W2.3 – Démoni Pusztaság', levelRange: [8, 10], icon: '😈' },
     { id: '2.4', name: 'W2.4 – Végzet Csarnoka', levelRange: [10, 15], icon: '💀' },
   ],
+  3: [
+    { id: '3.1', name: 'W3.1 – Part Menti Romok', levelRange: [10, 13], icon: '🏛️' },
+    { id: '3.2', name: 'W3.2 – Korall Palota', levelRange: [13, 15], icon: '🪸' },
+    { id: '3.3', name: 'W3.3 – Sötét Mélység', levelRange: [15, 18], icon: '🕳️' },
+    { id: '3.4', name: 'W3.4 – Poseidon Trónja', levelRange: [18, 25], icon: '🔱' },
+  ],
 };
 
 const WorldMap = () => {
