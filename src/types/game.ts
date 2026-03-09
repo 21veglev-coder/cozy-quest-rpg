@@ -376,6 +376,17 @@ export const ENEMY_ABILITIES: Record<string, EnemyAbility> = {
   fire_breath: { name: 'Tűzokádás', icon: '🔥', chance: 30, type: 'attack', damageMultiplier: 2.2, condition: 'always', description: 'Lángcsóva!' },
   ice_blast: { name: 'Jéglövedék', icon: '❄️', chance: 30, type: 'attack', damageMultiplier: 1.6, playerDebuff: { atk: 0, def: 0, spd: -5, turns: 2 }, condition: 'always', description: 'Fagyos lövedék!' },
   boss_enrage: { name: 'Bosszúállás', icon: '👿', chance: 100, type: 'buff', selfBuff: { atk: 15, spd: 5, turns: 99 }, condition: 'low_hp', description: 'A BOSS MEGVADULT!' },
+  // W3 - Elsüllyedt Világ abilities
+  tidal_wave: { name: 'Szökőár', icon: '🌊', chance: 30, type: 'attack', damageMultiplier: 2.4, element: 'water', condition: 'always', description: 'Hatalmas hullám csap le!' },
+  whirlpool: { name: 'Örvény', icon: '🌀', chance: 25, type: 'debuff', playerDebuff: { atk: -4, def: -3, spd: -6, turns: 3 }, damage: 10, element: 'water', condition: 'always', description: 'Örvénybe kerültél!' },
+  coral_shield: { name: 'Korall Pajzs', icon: '🪸', chance: 35, type: 'buff', selfBuff: { def: 15, turns: 3 }, condition: 'always', description: 'Korall védelem!' },
+  abyssal_drain: { name: 'Mélységi Szívás', icon: '🕳️', chance: 35, type: 'attack', damageMultiplier: 1.8, heal: 30, element: 'dark', condition: 'always', description: 'A mélység elnyel!' },
+  ink_cloud: { name: 'Tintafelhő', icon: '🦑', chance: 40, type: 'debuff', playerDebuff: { atk: -5, def: -2, spd: -4, turns: 2 }, element: 'poison', condition: 'always', description: 'Tinta vakít!' },
+  lightning_bolt: { name: 'Villámcsapás', icon: '⚡', chance: 30, type: 'attack', damageMultiplier: 2.6, element: 'lightning', condition: 'always', description: 'Villám sújt le!' },
+  tsunami: { name: 'Cunami', icon: '🌊', chance: 100, type: 'attack', damageMultiplier: 3.0, element: 'water', condition: 'low_hp', description: 'CUNAMI KÖZELEG!' },
+  frost_prison: { name: 'Jég Börtön', icon: '🧊', chance: 25, type: 'debuff', playerDebuff: { atk: -3, def: -5, spd: -8, turns: 2 }, element: 'ice', condition: 'always', description: 'Jégbe fagyasztva!' },
+  regenerate: { name: 'Mélytengeri Regen.', icon: '💚', chance: 50, type: 'heal', heal: 60, condition: 'low_hp', description: 'Mélytengeri gyógyulás!' },
+  boss_tsunami: { name: 'Végső Cunami', icon: '🌊', chance: 100, type: 'buff', selfBuff: { atk: 25, spd: 10, def: 10, turns: 99 }, condition: 'low_hp', description: 'A BOSS FELIDÉZTE A CUNAMIT!' },
 };
 
 export interface EnemyDef {
