@@ -320,6 +320,23 @@ export const PERKS: PerkDef[] = [
 ];
 
 // ---- ENEMY AI ABILITIES ----
+// ---- ELEMENTAL SYSTEM (W3) ----
+export type ElementType = 'water' | 'fire' | 'lightning' | 'ice' | 'poison' | 'dark' | 'none';
+
+export const ELEMENT_WEAKNESS: Record<ElementType, ElementType> = {
+  water: 'lightning',
+  fire: 'water',
+  lightning: 'ice',
+  ice: 'fire',
+  poison: 'dark',
+  dark: 'lightning',
+  none: 'none',
+};
+
+export const ELEMENT_ICONS: Record<ElementType, string> = {
+  water: '🌊', fire: '🔥', lightning: '⚡', ice: '❄️', poison: '🧪', dark: '💀', none: '',
+};
+
 export interface EnemyAbility {
   name: string;
   icon: string;
@@ -331,8 +348,20 @@ export interface EnemyAbility {
   selfBuff?: { atk?: number; def?: number; spd?: number; turns: number };
   playerDebuff?: { atk?: number; def?: number; spd?: number; turns: number };
   condition?: 'low_hp' | 'always'; // low_hp = <30% HP
+  element?: ElementType;
   description: string;
 }
+
+// ---- BOSS PHASES (W3) ----
+export interface BossPhase {
+  hpThreshold: number; // triggers when HP drops below this % (0-100)
+  name: string;
+  icon: string;
+  description: string;
+  statMultiplier: { atk?: number; def?: number; spd?: number };
+  newAbilities?: EnemyAbility[];
+}
+
 
 // Shared enemy abilities
 export const ENEMY_ABILITIES: Record<string, EnemyAbility> = {
