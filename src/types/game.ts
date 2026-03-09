@@ -320,6 +320,23 @@ export const PERKS: PerkDef[] = [
 ];
 
 // ---- ENEMY AI ABILITIES ----
+// ---- ELEMENTAL SYSTEM (W3) ----
+export type ElementType = 'water' | 'fire' | 'lightning' | 'ice' | 'poison' | 'dark' | 'none';
+
+export const ELEMENT_WEAKNESS: Record<ElementType, ElementType> = {
+  water: 'lightning',
+  fire: 'water',
+  lightning: 'ice',
+  ice: 'fire',
+  poison: 'dark',
+  dark: 'lightning',
+  none: 'none',
+};
+
+export const ELEMENT_ICONS: Record<ElementType, string> = {
+  water: '🌊', fire: '🔥', lightning: '⚡', ice: '❄️', poison: '🧪', dark: '💀', none: '',
+};
+
 export interface EnemyAbility {
   name: string;
   icon: string;
@@ -331,8 +348,20 @@ export interface EnemyAbility {
   selfBuff?: { atk?: number; def?: number; spd?: number; turns: number };
   playerDebuff?: { atk?: number; def?: number; spd?: number; turns: number };
   condition?: 'low_hp' | 'always'; // low_hp = <30% HP
+  element?: ElementType;
   description: string;
 }
+
+// ---- BOSS PHASES (W3) ----
+export interface BossPhase {
+  hpThreshold: number; // triggers when HP drops below this % (0-100)
+  name: string;
+  icon: string;
+  description: string;
+  statMultiplier: { atk?: number; def?: number; spd?: number };
+  newAbilities?: EnemyAbility[];
+}
+
 
 // Shared enemy abilities
 export const ENEMY_ABILITIES: Record<string, EnemyAbility> = {
@@ -347,6 +376,17 @@ export const ENEMY_ABILITIES: Record<string, EnemyAbility> = {
   fire_breath: { name: 'Tűzokádás', icon: '🔥', chance: 30, type: 'attack', damageMultiplier: 2.2, condition: 'always', description: 'Lángcsóva!' },
   ice_blast: { name: 'Jéglövedék', icon: '❄️', chance: 30, type: 'attack', damageMultiplier: 1.6, playerDebuff: { atk: 0, def: 0, spd: -5, turns: 2 }, condition: 'always', description: 'Fagyos lövedék!' },
   boss_enrage: { name: 'Bosszúállás', icon: '👿', chance: 100, type: 'buff', selfBuff: { atk: 15, spd: 5, turns: 99 }, condition: 'low_hp', description: 'A BOSS MEGVADULT!' },
+  // W3 - Elsüllyedt Világ abilities
+  tidal_wave: { name: 'Szökőár', icon: '🌊', chance: 30, type: 'attack', damageMultiplier: 2.4, element: 'water', condition: 'always', description: 'Hatalmas hullám csap le!' },
+  whirlpool: { name: 'Örvény', icon: '🌀', chance: 25, type: 'debuff', playerDebuff: { atk: -4, def: -3, spd: -6, turns: 3 }, damage: 10, element: 'water', condition: 'always', description: 'Örvénybe kerültél!' },
+  coral_shield: { name: 'Korall Pajzs', icon: '🪸', chance: 35, type: 'buff', selfBuff: { def: 15, turns: 3 }, condition: 'always', description: 'Korall védelem!' },
+  abyssal_drain: { name: 'Mélységi Szívás', icon: '🕳️', chance: 35, type: 'attack', damageMultiplier: 1.8, heal: 30, element: 'dark', condition: 'always', description: 'A mélység elnyel!' },
+  ink_cloud: { name: 'Tintafelhő', icon: '🦑', chance: 40, type: 'debuff', playerDebuff: { atk: -5, def: -2, spd: -4, turns: 2 }, element: 'poison', condition: 'always', description: 'Tinta vakít!' },
+  lightning_bolt: { name: 'Villámcsapás', icon: '⚡', chance: 30, type: 'attack', damageMultiplier: 2.6, element: 'lightning', condition: 'always', description: 'Villám sújt le!' },
+  tsunami: { name: 'Cunami', icon: '🌊', chance: 100, type: 'attack', damageMultiplier: 3.0, element: 'water', condition: 'low_hp', description: 'CUNAMI KÖZELEG!' },
+  frost_prison: { name: 'Jég Börtön', icon: '🧊', chance: 25, type: 'debuff', playerDebuff: { atk: -3, def: -5, spd: -8, turns: 2 }, element: 'ice', condition: 'always', description: 'Jégbe fagyasztva!' },
+  regenerate: { name: 'Mélytengeri Regen.', icon: '💚', chance: 50, type: 'heal', heal: 60, condition: 'low_hp', description: 'Mélytengeri gyógyulás!' },
+  boss_tsunami: { name: 'Végső Cunami', icon: '🌊', chance: 100, type: 'buff', selfBuff: { atk: 25, spd: 10, def: 10, turns: 99 }, condition: 'low_hp', description: 'A BOSS FELIDÉZTE A CUNAMIT!' },
 };
 
 export interface EnemyDef {
@@ -363,6 +403,9 @@ export interface EnemyDef {
   minZoneLevel: number;
   world?: number;
   abilities?: EnemyAbility[];
+  element?: ElementType;
+  phases?: BossPhase[];
+  timedTurns?: number; // if set, bonus loot/xp for killing within this many turns
 }
 
 export function getEnemyAction(enemy: EnemyDef, currentHp: number): EnemyAbility | null {
@@ -423,6 +466,51 @@ export const ENEMIES: EnemyDef[] = [
   // World 2 - Raid (endgame bosses)
   { name: 'Pokol Sárkány', icon: '🐲', level: 12, hp: 1500, atk: 75, def: 40, spd: 16, xpReward: 1200, goldReward: 500, locationType: 'raid', minZoneLevel: 10, world: 2, abilities: [ENEMY_ABILITIES.fire_breath, ENEMY_ABILITIES.war_cry, ENEMY_ABILITIES.shield_up, ENEMY_ABILITIES.boss_enrage] },
   { name: 'Örök Démonlord', icon: '👿', level: 15, hp: 2500, atk: 95, def: 50, spd: 18, xpReward: 2000, goldReward: 800, locationType: 'raid', minZoneLevel: 12, world: 2, abilities: [ENEMY_ABILITIES.dark_blast, ENEMY_ABILITIES.fire_breath, ENEMY_ABILITIES.war_cry, ENEMY_ABILITIES.heal_self, ENEMY_ABILITIES.boss_enrage] },
+
+  // ======= World 3 - Elsüllyedt Világ =======
+  // W3 Zone (triple W1 stats, elemental, timed encounters)
+  { name: 'Korall Harcos', icon: '🪸', level: 12, hp: 450, atk: 55, def: 30, spd: 14, xpReward: 350, goldReward: 130, locationType: 'zone', minZoneLevel: 10, world: 3, element: 'water', abilities: [ENEMY_ABILITIES.coral_shield, ENEMY_ABILITIES.heavy_strike], timedTurns: 12 },
+  { name: 'Mélytengeri Kígyó', icon: '🐍', level: 13, hp: 380, atk: 62, def: 22, spd: 22, xpReward: 400, goldReward: 150, locationType: 'zone', minZoneLevel: 10, world: 3, element: 'poison', abilities: [ENEMY_ABILITIES.ink_cloud, ENEMY_ABILITIES.poison_spit, ENEMY_ABILITIES.enrage], timedTurns: 10 },
+  { name: 'Sellő Boszorkány', icon: '🧜‍♀️', level: 14, hp: 350, atk: 68, def: 18, spd: 20, xpReward: 450, goldReward: 170, locationType: 'zone', minZoneLevel: 12, world: 3, element: 'water', abilities: [ENEMY_ABILITIES.tidal_wave, ENEMY_ABILITIES.whirlpool] },
+  { name: 'Polip Őr', icon: '🐙', level: 13, hp: 500, atk: 52, def: 28, spd: 10, xpReward: 380, goldReward: 140, locationType: 'zone', minZoneLevel: 10, world: 3, element: 'water', abilities: [ENEMY_ABILITIES.ink_cloud, ENEMY_ABILITIES.coral_shield, ENEMY_ABILITIES.heavy_strike], timedTurns: 14 },
+  { name: 'Villám Rája', icon: '⚡', level: 15, hp: 420, atk: 70, def: 20, spd: 28, xpReward: 500, goldReward: 190, locationType: 'zone', minZoneLevel: 12, world: 3, element: 'lightning', abilities: [ENEMY_ABILITIES.lightning_bolt, ENEMY_ABILITIES.whirlpool] },
+  { name: 'Jéghegy Elem', icon: '🧊', level: 14, hp: 600, atk: 50, def: 40, spd: 8, xpReward: 420, goldReward: 160, locationType: 'zone', minZoneLevel: 12, world: 3, element: 'ice', abilities: [ENEMY_ABILITIES.frost_prison, ENEMY_ABILITIES.ice_blast, ENEMY_ABILITIES.shield_up] },
+  { name: 'Cápa Gladiátor', icon: '🦈', level: 16, hp: 550, atk: 75, def: 25, spd: 24, xpReward: 550, goldReward: 210, locationType: 'zone', minZoneLevel: 14, world: 3, element: 'water', abilities: [ENEMY_ABILITIES.heavy_strike, ENEMY_ABILITIES.tidal_wave, ENEMY_ABILITIES.enrage], timedTurns: 10 },
+  { name: 'Mélység Réme', icon: '👁️', level: 18, hp: 700, atk: 82, def: 32, spd: 16, xpReward: 650, goldReward: 250, locationType: 'zone', minZoneLevel: 16, world: 3, element: 'dark', abilities: [ENEMY_ABILITIES.abyssal_drain, ENEMY_ABILITIES.dark_blast, ENEMY_ABILITIES.enrage] },
+  // W3 Dungeon (with boss phases)
+  { name: 'Korall Golem', icon: '🗿', level: 14, hp: 700, atk: 58, def: 45, spd: 6, xpReward: 480, goldReward: 180, locationType: 'dungeon', minZoneLevel: 10, world: 3, element: 'water', abilities: [ENEMY_ABILITIES.coral_shield, ENEMY_ABILITIES.heavy_strike, ENEMY_ABILITIES.regenerate] },
+  { name: 'Mélytengeri Nekromanta', icon: '🧟', level: 15, hp: 500, atk: 72, def: 22, spd: 14, xpReward: 550, goldReward: 200, locationType: 'dungeon', minZoneLevel: 12, world: 3, element: 'dark', abilities: [ENEMY_ABILITIES.abyssal_drain, ENEMY_ABILITIES.dark_blast, ENEMY_ABILITIES.regenerate] },
+  { name: 'Tengeri Hidra', icon: '🐉', level: 16, hp: 900, atk: 68, def: 35, spd: 14, xpReward: 700, goldReward: 260, locationType: 'dungeon', minZoneLevel: 14, world: 3, element: 'water', abilities: [ENEMY_ABILITIES.tidal_wave, ENEMY_ABILITIES.regenerate, ENEMY_ABILITIES.boss_enrage],
+    phases: [
+      { hpThreshold: 60, name: 'Második Fej', icon: '🐲', description: 'A Hidra második feje ébredezik!', statMultiplier: { atk: 1.3 }, newAbilities: [ENEMY_ABILITIES.whirlpool] },
+      { hpThreshold: 30, name: 'Dühödt Hidra', icon: '🔥', description: 'Minden fej egyszerre támad!', statMultiplier: { atk: 1.6, spd: 1.3 }, newAbilities: [ENEMY_ABILITIES.tsunami] },
+    ] },
+  { name: 'Tintahal Mágus', icon: '🦑', level: 15, hp: 550, atk: 75, def: 18, spd: 20, xpReward: 600, goldReward: 220, locationType: 'dungeon', minZoneLevel: 12, world: 3, element: 'poison', abilities: [ENEMY_ABILITIES.ink_cloud, ENEMY_ABILITIES.lightning_bolt, ENEMY_ABILITIES.whirlpool] },
+  { name: 'Poseidon Testőr', icon: '🔱', level: 17, hp: 800, atk: 80, def: 38, spd: 16, xpReward: 800, goldReward: 300, locationType: 'dungeon', minZoneLevel: 14, world: 3, element: 'water', abilities: [ENEMY_ABILITIES.tidal_wave, ENEMY_ABILITIES.coral_shield, ENEMY_ABILITIES.war_cry, ENEMY_ABILITIES.boss_enrage],
+    phases: [
+      { hpThreshold: 50, name: 'Vízpajzs Aktiválva', icon: '🛡️', description: 'Poseidon védelme aktív!', statMultiplier: { def: 1.5 } },
+      { hpThreshold: 25, name: 'Poseidon Dühe', icon: '🌊', description: 'A tenger haragja!', statMultiplier: { atk: 1.5, spd: 1.4 }, newAbilities: [ENEMY_ABILITIES.tsunami] },
+    ] },
+  { name: 'Abyssz Őr', icon: '🕳️', level: 18, hp: 1000, atk: 85, def: 40, spd: 12, xpReward: 900, goldReward: 350, locationType: 'dungeon', minZoneLevel: 16, world: 3, element: 'dark', abilities: [ENEMY_ABILITIES.abyssal_drain, ENEMY_ABILITIES.dark_blast, ENEMY_ABILITIES.regenerate, ENEMY_ABILITIES.boss_enrage],
+    phases: [
+      { hpThreshold: 50, name: 'Sötét Forma', icon: '💀', description: 'Az Abyssz igazi formája!', statMultiplier: { atk: 1.4, def: 1.2 } },
+      { hpThreshold: 20, name: 'Végső Mélység', icon: '🕳️', description: 'A Mélység elnyel mindent!', statMultiplier: { atk: 1.8, spd: 1.5 }, newAbilities: [ENEMY_ABILITIES.tsunami] },
+    ] },
+  // W3 Raid (ultimate bosses with multi-phase and timed)
+  { name: 'Kraken', icon: '🦑', level: 20, hp: 3000, atk: 100, def: 50, spd: 18, xpReward: 3000, goldReward: 1200, locationType: 'raid', minZoneLevel: 16, world: 3, element: 'water', timedTurns: 25,
+    abilities: [ENEMY_ABILITIES.tidal_wave, ENEMY_ABILITIES.ink_cloud, ENEMY_ABILITIES.whirlpool, ENEMY_ABILITIES.coral_shield, ENEMY_ABILITIES.boss_tsunami],
+    phases: [
+      { hpThreshold: 70, name: 'Csápok Ébred', icon: '🐙', description: 'A Kraken kinyújtja csápjait!', statMultiplier: { atk: 1.2 }, newAbilities: [ENEMY_ABILITIES.heavy_strike] },
+      { hpThreshold: 40, name: 'Tenger Ura', icon: '🌊', description: 'A Kraken uralja az óceánt!', statMultiplier: { atk: 1.5, def: 1.3 }, newAbilities: [ENEMY_ABILITIES.tsunami] },
+      { hpThreshold: 15, name: 'Végső Düh', icon: '😤', description: 'A KRAKEN MINDENT ELPUSZTÍT!', statMultiplier: { atk: 2.0, spd: 1.5 }, newAbilities: [ENEMY_ABILITIES.lightning_bolt] },
+    ] },
+  { name: 'Poseidon, Tengerek Istene', icon: '🔱', level: 25, hp: 5000, atk: 130, def: 65, spd: 20, xpReward: 5000, goldReward: 2000, locationType: 'raid', minZoneLevel: 18, world: 3, element: 'water', timedTurns: 30,
+    abilities: [ENEMY_ABILITIES.tidal_wave, ENEMY_ABILITIES.lightning_bolt, ENEMY_ABILITIES.coral_shield, ENEMY_ABILITIES.regenerate, ENEMY_ABILITIES.boss_tsunami],
+    phases: [
+      { hpThreshold: 75, name: 'Vihar Idézés', icon: '⛈️', description: 'Poseidon vihart idéz!', statMultiplier: { atk: 1.3 }, newAbilities: [ENEMY_ABILITIES.frost_prison] },
+      { hpThreshold: 50, name: 'Isten Haragja', icon: '⚡', description: 'Poseidon haragra gerjed!', statMultiplier: { atk: 1.6, def: 1.3 }, newAbilities: [ENEMY_ABILITIES.tsunami] },
+      { hpThreshold: 25, name: 'Végítélet', icon: '🌊', description: 'AZ ÓCEÁN FELEMÉSZTI A VILÁGOT!', statMultiplier: { atk: 2.0, spd: 1.5, def: 1.5 } },
+    ] },
 ];
 
 // ---- SET BONUSES ----
@@ -437,6 +525,8 @@ export const SET_BONUSES: Record<string, { pieces: number; bonus: string; effect
   'Erőd': { pieces: 3, bonus: 'DEF +20, HP +80', effect: { def: 20, hp: 80 } },
   'Vérszomj': { pieces: 2, bonus: 'ATK +20, CRIT +10%', effect: { atk: 20, crit: 10 } },
   'Halál': { pieces: 2, bonus: 'ATK +15, MP +40', effect: { atk: 15, mp: 40 } },
+  // W3 sets
+  'Mélység': { pieces: 3, bonus: 'ATK +25, DEF +15, HP +80, MP +30', effect: { atk: 25, def: 15, hp: 80, mp: 30 } },
 };
 
 export const RARITY_COLORS: Record<string, string> = {
@@ -569,6 +659,11 @@ export const LOOT_TABLE: LootDrop[] = [
   { name: 'Aranyérc', type: 'material', rarity: 'rare', icon: '🥇', description: 'Értékes fém.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 15, minEnemyLevel: 7 },
   { name: 'Sárkány Pikkely', type: 'material', rarity: 'epic', icon: '🐉', description: 'Nagyon ritka anyag.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 10, minEnemyLevel: 8 },
   { name: 'Démoni Esszencia', type: 'material', rarity: 'epic', icon: '😈', description: 'Sötét energia.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 8, minEnemyLevel: 10 },
+  // W3 materials
+  { name: 'Korall Szilánk', type: 'material', rarity: 'uncommon', icon: '🪸', description: 'Tengeri korall.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 40, minEnemyLevel: 12 },
+  { name: 'Mélytengeri Gyöngy', type: 'material', rarity: 'rare', icon: '🫧', description: 'Ritka gyöngy.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 18, minEnemyLevel: 14 },
+  { name: 'Kraken Tinta', type: 'material', rarity: 'epic', icon: '🦑', description: 'Kraken tinta.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 8, minEnemyLevel: 16 },
+  { name: 'Poseidon Szilánk', type: 'material', rarity: 'legendary', icon: '🔱', description: 'Isteni fragment.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 3, minEnemyLevel: 20 },
 
   // ---- GEAR (reduced drop chances) ----
   // Common gear
@@ -593,6 +688,16 @@ export const LOOT_TABLE: LootDrop[] = [
   // Legendary (raid only)
   { name: 'Örök Lángoló Kard', type: 'weapon', rarity: 'legendary', icon: '⚔️', description: 'Legendás fegyver.', atk: 30, def: 5, spd: 5, hp_bonus: 20, mp_bonus: 10, crit_chance: 12, set_name: 'Legenda', dropChance: 2, minEnemyLevel: 10 },
   { name: 'Sárkányölő Páncél', type: 'chest', rarity: 'legendary', icon: '🐲', description: 'A legerősebb vért.', atk: 10, def: 25, spd: 0, hp_bonus: 60, mp_bonus: 0, crit_chance: 5, set_name: 'Legenda', dropChance: 1, minEnemyLevel: 10 },
+  // W3 gear - Elsüllyedt Világ
+  { name: 'Korall Kard', type: 'weapon', rarity: 'epic', icon: '🪸', description: 'Élő korallból edzett penge.', atk: 22, def: 5, spd: 3, hp_bonus: 15, mp_bonus: 0, crit_chance: 6, set_name: 'Mélység', dropChance: 3, minEnemyLevel: 12 },
+  { name: 'Sellő Sisak', type: 'helmet', rarity: 'epic', icon: '🧜‍♀️', description: 'Sellőpikkely fejvédő.', atk: 4, def: 15, spd: 2, hp_bonus: 35, mp_bonus: 15, crit_chance: 2, set_name: 'Mélység', dropChance: 2, minEnemyLevel: 14 },
+  { name: 'Tenger Gyűrűje', type: 'ring', rarity: 'epic', icon: '🌊', description: 'Az óceán ereje.', atk: 8, def: 3, spd: 3, hp_bonus: 10, mp_bonus: 20, crit_chance: 6, set_name: 'Mélység', dropChance: 2, minEnemyLevel: 14 },
+  { name: 'Polip Kesztyű', type: 'gloves', rarity: 'epic', icon: '🐙', description: 'Nyolc ujjú erő.', atk: 12, def: 5, spd: 5, hp_bonus: 0, mp_bonus: 0, crit_chance: 10, set_name: null, dropChance: 3, minEnemyLevel: 12 },
+  { name: 'Abysszi Csizma', type: 'boots', rarity: 'epic', icon: '🕳️', description: 'A mélység lábbelije.', atk: 3, def: 14, spd: 5, hp_bonus: 20, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 2, minEnemyLevel: 14 },
+  // W3 Legendary
+  { name: 'Poseidon Szigonya', type: 'weapon', rarity: 'legendary', icon: '🔱', description: 'Az Isten fegyvere.', atk: 45, def: 8, spd: 8, hp_bonus: 30, mp_bonus: 20, crit_chance: 15, set_name: 'Mélység', dropChance: 1, minEnemyLevel: 18 },
+  { name: 'Kraken Páncél', type: 'chest', rarity: 'legendary', icon: '🦑', description: 'Kraken bőrből készült vért.', atk: 12, def: 35, spd: 2, hp_bonus: 80, mp_bonus: 0, crit_chance: 5, set_name: 'Mélység', dropChance: 1, minEnemyLevel: 18 },
+  { name: 'Cunami Nyaklánc', type: 'necklace', rarity: 'legendary', icon: '🌊', description: 'A tenger dühe.', atk: 15, def: 5, spd: 5, hp_bonus: 20, mp_bonus: 40, crit_chance: 8, set_name: null, dropChance: 1, minEnemyLevel: 20 },
 ];
 
 export function rollLoot(enemyLevel: number, locationType: 'zone' | 'dungeon' | 'raid'): LootDrop | null {

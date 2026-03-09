@@ -35,6 +35,12 @@ const SUB_ZONES: Record<number, { id: string; name: string; levelRange: [number,
     { id: '2.3', name: 'W2.3 – Démoni Pusztaság', levelRange: [8, 10], icon: '😈' },
     { id: '2.4', name: 'W2.4 – Végzet Csarnoka', levelRange: [10, 15], icon: '💀' },
   ],
+  3: [
+    { id: '3.1', name: 'W3.1 – Part Menti Romok', levelRange: [10, 13], icon: '🏛️' },
+    { id: '3.2', name: 'W3.2 – Korall Palota', levelRange: [13, 15], icon: '🪸' },
+    { id: '3.3', name: 'W3.3 – Sötét Mélység', levelRange: [15, 18], icon: '🕳️' },
+    { id: '3.4', name: 'W3.4 – Poseidon Trónja', levelRange: [18, 25], icon: '🔱' },
+  ],
 };
 
 const WorldMap = () => {
@@ -86,6 +92,7 @@ const WorldMap = () => {
   // Each sub-zone shows a 2x2 grid (4 map sections)
   const gridSize = 2;
   const canAccessWorld2 = character && character.prestige >= 1 && character.subclass;
+  const canAccessWorld3 = character && character.prestige >= 2 && character.subclass;
   const canAccessSubZone = (idx: number) => {
     if (!character) return false;
     const sz = currentSubZones[idx];
@@ -114,13 +121,18 @@ const WorldMap = () => {
           onClick={() => { if (canAccessWorld2) { setWorld(2); setSubZoneIdx(0); } }}>
           🏴 W2 {!canAccessWorld2 && '🔒'}
         </Button>
+        <Button variant={world === 3 ? 'default' : 'outline'} size="sm" className="font-display text-xs"
+          disabled={!canAccessWorld3}
+          onClick={() => { if (canAccessWorld3) { setWorld(3); setSubZoneIdx(0); } }}>
+          🌊 W3 {!canAccessWorld3 && '🔒'}
+        </Button>
       </div>
 
-      {world === 2 && !canAccessWorld2 ? (
+      {(world === 2 && !canAccessWorld2) || (world === 3 && !canAccessWorld3) ? (
         <div className="flex-1 flex items-center justify-center text-muted-foreground">
           <div className="text-center">
             <p className="text-4xl mb-3">🔒</p>
-            <p className="font-display">Prestige 1 és subclass szükséges a W2-höz!</p>
+            <p className="font-display">{world === 3 ? 'Prestige 2 és subclass szükséges a W3-hoz!' : 'Prestige 1 és subclass szükséges a W2-höz!'}</p>
           </div>
         </div>
       ) : (
