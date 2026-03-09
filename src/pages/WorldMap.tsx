@@ -128,11 +128,11 @@ const WorldMap = () => {
         </Button>
       </div>
 
-      {world === 2 && !canAccessWorld2 ? (
+      {(world === 2 && !canAccessWorld2) || (world === 3 && !canAccessWorld3) ? (
         <div className="flex-1 flex items-center justify-center text-muted-foreground">
           <div className="text-center">
             <p className="text-4xl mb-3">🔒</p>
-            <p className="font-display">Prestige 1 és subclass szükséges a W2-höz!</p>
+            <p className="font-display">{world === 3 ? 'Prestige 2 és subclass szükséges a W3-hoz!' : 'Prestige 1 és subclass szükséges a W2-höz!'}</p>
           </div>
         </div>
       ) : (
