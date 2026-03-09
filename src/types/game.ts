@@ -525,6 +525,8 @@ export const SET_BONUSES: Record<string, { pieces: number; bonus: string; effect
   'Erőd': { pieces: 3, bonus: 'DEF +20, HP +80', effect: { def: 20, hp: 80 } },
   'Vérszomj': { pieces: 2, bonus: 'ATK +20, CRIT +10%', effect: { atk: 20, crit: 10 } },
   'Halál': { pieces: 2, bonus: 'ATK +15, MP +40', effect: { atk: 15, mp: 40 } },
+  // W3 sets
+  'Mélység': { pieces: 3, bonus: 'ATK +25, DEF +15, HP +80, MP +30', effect: { atk: 25, def: 15, hp: 80, mp: 30 } },
 };
 
 export const RARITY_COLORS: Record<string, string> = {
