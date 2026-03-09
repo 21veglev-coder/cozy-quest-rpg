@@ -121,6 +121,11 @@ const WorldMap = () => {
           onClick={() => { if (canAccessWorld2) { setWorld(2); setSubZoneIdx(0); } }}>
           🏴 W2 {!canAccessWorld2 && '🔒'}
         </Button>
+        <Button variant={world === 3 ? 'default' : 'outline'} size="sm" className="font-display text-xs"
+          disabled={!canAccessWorld3}
+          onClick={() => { if (canAccessWorld3) { setWorld(3); setSubZoneIdx(0); } }}>
+          🌊 W3 {!canAccessWorld3 && '🔒'}
+        </Button>
       </div>
 
       {world === 2 && !canAccessWorld2 ? (
