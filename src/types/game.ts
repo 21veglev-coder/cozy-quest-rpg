@@ -657,6 +657,11 @@ export const LOOT_TABLE: LootDrop[] = [
   { name: 'Aranyérc', type: 'material', rarity: 'rare', icon: '🥇', description: 'Értékes fém.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 15, minEnemyLevel: 7 },
   { name: 'Sárkány Pikkely', type: 'material', rarity: 'epic', icon: '🐉', description: 'Nagyon ritka anyag.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 10, minEnemyLevel: 8 },
   { name: 'Démoni Esszencia', type: 'material', rarity: 'epic', icon: '😈', description: 'Sötét energia.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 8, minEnemyLevel: 10 },
+  // W3 materials
+  { name: 'Korall Szilánk', type: 'material', rarity: 'uncommon', icon: '🪸', description: 'Tengeri korall.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 40, minEnemyLevel: 12 },
+  { name: 'Mélytengeri Gyöngy', type: 'material', rarity: 'rare', icon: '🫧', description: 'Ritka gyöngy.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 18, minEnemyLevel: 14 },
+  { name: 'Kraken Tinta', type: 'material', rarity: 'epic', icon: '🦑', description: 'Kraken tinta.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 8, minEnemyLevel: 16 },
+  { name: 'Poseidon Szilánk', type: 'material', rarity: 'legendary', icon: '🔱', description: 'Isteni fragment.', atk: 0, def: 0, spd: 0, hp_bonus: 0, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 3, minEnemyLevel: 20 },
 
   // ---- GEAR (reduced drop chances) ----
   // Common gear
@@ -681,6 +686,16 @@ export const LOOT_TABLE: LootDrop[] = [
   // Legendary (raid only)
   { name: 'Örök Lángoló Kard', type: 'weapon', rarity: 'legendary', icon: '⚔️', description: 'Legendás fegyver.', atk: 30, def: 5, spd: 5, hp_bonus: 20, mp_bonus: 10, crit_chance: 12, set_name: 'Legenda', dropChance: 2, minEnemyLevel: 10 },
   { name: 'Sárkányölő Páncél', type: 'chest', rarity: 'legendary', icon: '🐲', description: 'A legerősebb vért.', atk: 10, def: 25, spd: 0, hp_bonus: 60, mp_bonus: 0, crit_chance: 5, set_name: 'Legenda', dropChance: 1, minEnemyLevel: 10 },
+  // W3 gear - Elsüllyedt Világ
+  { name: 'Korall Kard', type: 'weapon', rarity: 'epic', icon: '🪸', description: 'Élő korallból edzett penge.', atk: 22, def: 5, spd: 3, hp_bonus: 15, mp_bonus: 0, crit_chance: 6, set_name: 'Mélység', dropChance: 3, minEnemyLevel: 12 },
+  { name: 'Sellő Sisak', type: 'helmet', rarity: 'epic', icon: '🧜‍♀️', description: 'Sellőpikkely fejvédő.', atk: 4, def: 15, spd: 2, hp_bonus: 35, mp_bonus: 15, crit_chance: 2, set_name: 'Mélység', dropChance: 2, minEnemyLevel: 14 },
+  { name: 'Tenger Gyűrűje', type: 'ring', rarity: 'epic', icon: '🌊', description: 'Az óceán ereje.', atk: 8, def: 3, spd: 3, hp_bonus: 10, mp_bonus: 20, crit_chance: 6, set_name: 'Mélység', dropChance: 2, minEnemyLevel: 14 },
+  { name: 'Polip Kesztyű', type: 'gloves', rarity: 'epic', icon: '🐙', description: 'Nyolc ujjú erő.', atk: 12, def: 5, spd: 5, hp_bonus: 0, mp_bonus: 0, crit_chance: 10, set_name: null, dropChance: 3, minEnemyLevel: 12 },
+  { name: 'Abysszi Csizma', type: 'boots', rarity: 'epic', icon: '🕳️', description: 'A mélység lábbelije.', atk: 3, def: 14, spd: 5, hp_bonus: 20, mp_bonus: 0, crit_chance: 0, set_name: null, dropChance: 2, minEnemyLevel: 14 },
+  // W3 Legendary
+  { name: 'Poseidon Szigonya', type: 'weapon', rarity: 'legendary', icon: '🔱', description: 'Az Isten fegyvere.', atk: 45, def: 8, spd: 8, hp_bonus: 30, mp_bonus: 20, crit_chance: 15, set_name: 'Mélység', dropChance: 1, minEnemyLevel: 18 },
+  { name: 'Kraken Páncél', type: 'chest', rarity: 'legendary', icon: '🦑', description: 'Kraken bőrből készült vért.', atk: 12, def: 35, spd: 2, hp_bonus: 80, mp_bonus: 0, crit_chance: 5, set_name: 'Mélység', dropChance: 1, minEnemyLevel: 18 },
+  { name: 'Cunami Nyaklánc', type: 'necklace', rarity: 'legendary', icon: '🌊', description: 'A tenger dühe.', atk: 15, def: 5, spd: 5, hp_bonus: 20, mp_bonus: 40, crit_chance: 8, set_name: null, dropChance: 1, minEnemyLevel: 20 },
 ];
 
 export function rollLoot(enemyLevel: number, locationType: 'zone' | 'dungeon' | 'raid'): LootDrop | null {
