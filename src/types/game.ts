@@ -392,6 +392,9 @@ export interface EnemyDef {
   minZoneLevel: number;
   world?: number;
   abilities?: EnemyAbility[];
+  element?: ElementType;
+  phases?: BossPhase[];
+  timedTurns?: number; // if set, bonus loot/xp for killing within this many turns
 }
 
 export function getEnemyAction(enemy: EnemyDef, currentHp: number): EnemyAbility | null {
