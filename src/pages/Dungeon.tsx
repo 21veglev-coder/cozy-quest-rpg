@@ -5,8 +5,9 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { GameCharacter, InventoryItem, ENEMIES, ENEMY_ABILITIES, EnemyDef, GameLocation, SET_BONUSES, SKILLS, SkillDef, rollLoot } from '@/types/game';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Swords, Dice6, Heart, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Swords, Dice6, Heart, ChevronDown, Zap } from 'lucide-react';
 import { toast } from 'sonner';
+import PokemonBattleScene from '@/components/PokemonBattleScene';
 
 const rollDice = (sides: number) => Math.floor(Math.random() * sides) + 1;
 
