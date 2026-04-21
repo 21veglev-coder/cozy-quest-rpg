@@ -292,81 +292,73 @@ const Dungeon = () => {
       </div>
 
       <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4">
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          {enemy && (
-            <motion.div className="rpg-panel p-5 text-center w-56" animate={enemyHp <= 0 ? { opacity: 0.3 } : {}}>
-              <div className="text-4xl mb-1">{enemy.icon}</div>
-              <p className="font-display text-sm">{enemy.name}</p>
-              <div className="h-2 bg-secondary rounded-full overflow-hidden mt-2">
-                <motion.div className="h-full bg-blood rounded-full" animate={{ width: `${(enemyHp / enemy.hp) * 100}%` }} />
-              </div>
-              <p className="text-[10px] text-blood mt-1">{enemyHp}/{enemy.hp}</p>
-              {bs.debuffs.length > 0 && (
-                <div className="flex justify-center gap-1 mt-1">
-                  {bs.debuffs.map((d, i) => (
-                    <span key={i} className="text-[8px] text-destructive bg-destructive/10 px-1 rounded">
-                      {d.atk !== 0 && `A${d.atk}`}{d.def !== 0 && `D${d.def}`}({d.turns}t)
-                    </span>
-                  ))}
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          <div className="text-xl text-gold">⚔️</div>
-
-          <div className="rpg-panel-gold p-4 text-center w-56">
-            <p className="font-display text-sm text-gold">{character.name}</p>
-            <div className="h-2 bg-secondary rounded-full overflow-hidden mt-2">
-              <motion.div className="h-full bg-nature rounded-full" animate={{ width: `${(playerHp / character.max_hp) * 100}%` }} />
-            </div>
-            <p className="text-[10px] text-nature mt-1">{playerHp}/{character.max_hp}</p>
-            <div className="h-1.5 bg-secondary rounded-full overflow-hidden mt-1">
-              <motion.div className="h-full bg-mana rounded-full" animate={{ width: `${(playerMp / character.max_mp) * 100}%` }} />
-            </div>
-            <p className="text-[9px] text-mana mt-0.5">{playerMp}/{character.max_mp} MP</p>
-            {bs.buffs.length > 0 && (
-              <div className="flex justify-center gap-1 mt-1 flex-wrap">
-                {bs.buffs.map((b, i) => (
-                  <span key={i} className="text-[8px] text-nature bg-nature/10 px-1 rounded">
-                    {b.atk > 0 && `+${b.atk}A`}{b.def > 0 && `+${b.def}D`}{b.crit > 0 && `+${b.crit}%C`}({b.turns}t)
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-col items-center gap-2 w-full max-w-xs">
-            {battleActive ? (
-              <>
-                <div className="flex gap-2 w-full">
-                  <Button onClick={doTurn} className="flex-1 font-display"><Dice6 className="w-4 h-4 mr-1" /> Támadás</Button>
-                  <Button variant="outline" onClick={usePotion} className="font-display"><Heart className="w-4 h-4 mr-1 text-blood" /> Ital</Button>
-                </div>
-                {availableSkills.length > 0 && (
-                  <div className="grid grid-cols-2 gap-1 w-full">
-                    {availableSkills.map(skill => {
+        <div className="flex-1">
+          {enemy ? (
+            <PokemonBattleScene
+              playerClass={character.class}
+              player={{ name: character.name, level: character.level, hp: playerHp, maxHp: character.max_hp, mp: playerMp, maxMp: character.max_mp }}
+              enemyName={enemy.name}
+              enemyIcon={enemy.icon}
+              enemyLevel={enemy.level}
+              enemyHp={enemyHp}
+              enemyMaxHp={enemy.hp}
+              attackingSide={null}
+              enemyDefeated={enemyHp <= 0}
+              playerDefeated={playerHp <= 0}
+              locationType={location.type}
+              world={(location as any).world}
+              playerBadges={bs.buffs.length > 0 ? bs.buffs.map((b, i) => (
+                <span key={i} className="text-[8px] bg-nature/20 text-nature px-1.5 py-0.5 rounded font-display">
+                  {b.atk > 0 && `+${b.atk}A `}{b.def > 0 && `+${b.def}D `}{b.crit > 0 && `+${b.crit}%C `}({b.turns}t)
+                </span>
+              )) : null}
+              enemyBadges={bs.debuffs.length > 0 ? bs.debuffs.map((d, i) => (
+                <span key={i} className="text-[8px] bg-mana/20 text-mana px-1.5 py-0.5 rounded font-display">
+                  {d.atk !== 0 && `A${d.atk} `}{d.def !== 0 && `D${d.def} `}({d.turns}t)
+                </span>
+              )) : null}
+              dialogue={log[log.length - 1] || `${floor}/${maxFloors}. szint - mit teszel?`}
+              actionMenu={
+                battleActive ? (
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} onClick={doTurn}
+                      className="rpg-panel p-2 flex items-center gap-1.5 hover:border-glow">
+                      <Dice6 className="w-4 h-4 text-ember" />
+                      <span className="font-display text-[11px]">Támadás</span>
+                    </motion.button>
+                    <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} onClick={usePotion}
+                      className="rpg-panel p-2 flex items-center gap-1.5 hover:border-glow">
+                      <Heart className="w-4 h-4 text-blood" />
+                      <span className="font-display text-[11px]">Ital</span>
+                    </motion.button>
+                    {availableSkills.slice(0, 4).map(skill => {
                       const cd = bs.cooldowns[skill.id] || 0;
                       const canUse = cd === 0 && playerMp >= skill.mpCost;
                       return (
-                        <Button key={skill.id} size="sm" variant="outline"
-                          className={`font-display text-[9px] h-7 ${canUse ? 'hover:border-gold/50' : 'opacity-40'}`}
-                          disabled={!canUse} onClick={() => useSkill(skill)}
-                          title={`${skill.description} (${skill.mpCost}MP, ${skill.cooldown}t CD)`}>
-                          {skill.icon} {skill.name}
-                          {cd > 0 && <span className="text-destructive ml-0.5">({cd})</span>}
-                        </Button>
+                        <button key={skill.id} disabled={!canUse} onClick={() => useSkill(skill)}
+                          className={`rpg-panel p-2 flex items-center gap-1 ${canUse ? 'hover:border-glow' : 'opacity-40'}`}
+                          title={`${skill.description} (${skill.mpCost}MP)`}>
+                          <Zap className="w-3 h-3 text-mana shrink-0" />
+                          <span className="font-display text-[10px] truncate">{skill.icon} {skill.name}</span>
+                          {cd > 0 && <span className="text-[9px] text-destructive">({cd})</span>}
+                        </button>
                       );
                     })}
                   </div>
-                )}
-              </>
-            ) : !dungeonComplete ? (
-              <Button onClick={nextFloor} className="font-display glow-gold-sm"><ChevronDown className="w-4 h-4 mr-1" /> Következő szint</Button>
-            ) : (
-              <Button onClick={() => navigate('/lobby')} className="font-display">Vissza a lobbyba</Button>
-            )}
-          </div>
+                ) : !dungeonComplete ? (
+                  <Button onClick={nextFloor} className="w-full font-display glow-gold-sm">
+                    <ChevronDown className="w-4 h-4 mr-1" /> Következő szint
+                  </Button>
+                ) : (
+                  <Button onClick={() => navigate('/lobby')} className="w-full font-display">
+                    Vissza a lobbyba
+                  </Button>
+                )
+              }
+            />
+          ) : (
+            <div className="text-center text-muted-foreground font-display">Ellenfél keresése...</div>
+          )}
         </div>
 
         <div className="lg:w-72 rpg-panel flex flex-col max-h-[400px]">
