@@ -53,6 +53,20 @@ const Teams = () => {
     return () => { supabase.removeChannel(channel); };
   }, [myTeam?.id]);
 
+  // Watch own team status — if leader starts the mission, navigate all members to team-combat
+  useEffect(() => {
+    if (!myTeam) return;
+    const channel = supabase.channel('team-status-' + myTeam.id)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'teams', filter: `id=eq.${myTeam.id}` }, (payload: any) => {
+        const next = payload.new;
+        if (next?.status === 'in_progress' && myTeamMembers.length > 1) {
+          navigate(`/team-combat/${myTeam.id}`);
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [myTeam?.id, myTeamMembers.length]);
+
   const loadMyInvites = async () => {
     if (!user) return;
     const res = await supabase.from('invites').select('*').eq('to_user_id', user.id).eq('type', 'team').eq('status', 'pending');
