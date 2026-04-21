@@ -70,24 +70,38 @@ interface PokemonBattleSceneProps {
  * - Bottom dialogue / action box
  */
 const PokemonBattleScene = ({
-  playerClass, player,
-  enemyName, enemyIcon, enemyLevel, enemyHp, enemyMaxHp,
+  playerClass, player, players,
+  enemyName, enemyIcon, enemyLevel, enemyHp, enemyMaxHp, enemies,
+  wave, maxWaves,
   attackingSide, shakePlayer, shakeEnemy,
   enemyDefeated, playerDefeated,
   locationType, world,
   playerBadges, enemyBadges, floatingNumbers,
-  dialogue, actionMenu,
+  dialogue, actionMenu, onTargetEnemy,
 }: PokemonBattleSceneProps) => {
-  const playerSprite = getPlayerSprite(playerClass);
-  const enemySprite = getEnemySprite(enemyName, enemyIcon);
   const bg = getBattleBackground(locationType, world);
 
-  const enemyHpPct = enemyMaxHp > 0 ? (enemyHp / enemyMaxHp) * 100 : 0;
-  const playerHpPct = player.maxHp > 0 ? (player.hp / player.maxHp) * 100 : 0;
-  const playerMpPct = player.maxMp && player.maxMp > 0 ? ((player.mp || 0) / player.maxMp) * 100 : 0;
+  // Normalize to arrays
+  const playerList: BattleStats[] = players && players.length > 0
+    ? players
+    : (player ? [{ ...player, charClass: playerClass, isActive: true }] : []);
+  const enemyList: EnemyStats[] = enemies && enemies.length > 0
+    ? enemies
+    : (enemyName ? [{
+        name: enemyName, icon: enemyIcon || '👹', level: enemyLevel || 1,
+        hp: enemyHp || 0, maxHp: enemyMaxHp || 1, isDefeated: enemyDefeated,
+      }] : []);
 
   const hpColor = (pct: number) =>
     pct > 50 ? 'bg-nature' : pct > 25 ? 'bg-gold' : 'bg-blood';
+
+  // Layout sizing for multiple sprites
+  const enemySize = enemyList.length === 1 ? 'w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48'
+    : enemyList.length === 2 ? 'w-24 h-24 sm:w-32 sm:h-32 lg:w-36 lg:h-36'
+    : 'w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28';
+  const playerSize = playerList.length === 1 ? 'w-32 h-32 sm:w-40 sm:h-40 lg:w-52 lg:h-52'
+    : playerList.length === 2 ? 'w-28 h-28 sm:w-32 sm:h-32 lg:w-40 lg:h-40'
+    : 'w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32';
 
   return (
     <div className="relative w-full rounded-lg overflow-hidden border-2 border-gold/40 shadow-lg">
@@ -101,122 +115,162 @@ const PokemonBattleScene = ({
           {floatingNumbers}
         </div>
 
-        {/* Enemy Stats Panel - top-left */}
-        <motion.div
-          initial={{ x: -100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          className="absolute top-3 left-3 bg-card/90 backdrop-blur-sm border-2 border-gold/60 rounded-lg p-2 min-w-[180px] shadow-md"
-        >
-          <div className="flex items-baseline justify-between gap-2 mb-1">
-            <span className="font-display text-xs text-foreground truncate">{enemyName}</span>
-            <span className="font-display text-[10px] text-muted-foreground">Lv.{enemyLevel}</span>
+        {/* Wave indicator - top center */}
+        {wave !== undefined && maxWaves !== undefined && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 bg-card/90 backdrop-blur-sm border-2 border-gold/60 rounded-full px-3 py-1 shadow-md">
+            <span className="font-display text-[10px] text-gold">🌊 Hullám {wave}/{maxWaves}</span>
           </div>
-          <div className="h-2 bg-secondary rounded-full overflow-hidden border border-border">
-            <motion.div
-              className={`h-full ${hpColor(enemyHpPct)} rounded-full`}
-              animate={{ width: `${Math.max(0, enemyHpPct)}%` }}
-              transition={{ duration: 0.5 }}
-            />
-          </div>
-          <div className="text-[9px] text-right text-muted-foreground mt-0.5 font-display">
-            HP {enemyHp}/{enemyMaxHp}
-          </div>
-          {enemyBadges && <div className="flex flex-wrap gap-1 mt-1">{enemyBadges}</div>}
-        </motion.div>
+        )}
 
-        {/* Enemy sprite - top-right */}
-        <motion.div
-          className="absolute top-8 right-8 w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48"
-          initial={{ x: 200, opacity: 0 }}
-          animate={
-            enemyDefeated
-              ? { opacity: 0, y: 60, rotateZ: 25, scale: 0.8 }
-              : shakeEnemy
-                ? { x: [0, -10, 10, -8, 8, 0] }
-                : attackingSide === 'enemy'
-                  ? { x: [0, -40, 0], scale: [1, 1.05, 1] }
-                  : { x: 0, opacity: 1 }
-          }
-          transition={{ duration: enemyDefeated ? 0.8 : 0.4 }}
-        >
-          <motion.img
-            src={enemySprite}
-            alt={enemyName}
-            className="w-full h-full object-contain pixelated drop-shadow-[0_8px_8px_rgba(0,0,0,0.5)]"
-            animate={enemyHpPct < 30 && !enemyDefeated ? { y: [0, -3, 0] } : {}}
-            transition={{ duration: 0.8, repeat: Infinity }}
-            style={{ imageRendering: 'pixelated' }}
-          />
-          {/* Enemy shadow */}
-          {!enemyDefeated && (
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-24 h-3 bg-black/40 rounded-full blur-sm" />
-          )}
-        </motion.div>
-
-        {/* Player sprite - bottom-left (back view) */}
-        <motion.div
-          className="absolute bottom-2 left-4 w-32 h-32 sm:w-40 sm:h-40 lg:w-52 lg:h-52"
-          initial={{ x: -200, opacity: 0 }}
-          animate={
-            playerDefeated
-              ? { opacity: 0.4, y: 30, rotateZ: -15 }
-              : shakePlayer
-                ? { x: [0, -8, 8, -5, 5, 0] }
-                : attackingSide === 'player'
-                  ? { x: [0, 40, 0], scale: [1, 1.05, 1] }
-                  : { x: 0, opacity: 1 }
-          }
-          transition={{ duration: 0.4 }}
-        >
-          <motion.img
-            src={playerSprite}
-            alt={player.name}
-            className="w-full h-full object-contain drop-shadow-[0_8px_8px_rgba(0,0,0,0.5)]"
-            animate={playerHpPct < 25 && !playerDefeated ? { y: [0, -2, 0] } : {}}
-            transition={{ duration: 0.6, repeat: Infinity }}
-            style={{ imageRendering: 'pixelated' }}
-          />
-          {!playerDefeated && (
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-28 h-3 bg-black/40 rounded-full blur-sm" />
-          )}
-        </motion.div>
-
-        {/* Player Stats Panel - bottom-right */}
-        <motion.div
-          initial={{ x: 100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          className="absolute bottom-3 right-3 bg-card/90 backdrop-blur-sm border-2 border-gold/60 rounded-lg p-2 min-w-[200px] shadow-md"
-        >
-          <div className="flex items-baseline justify-between gap-2 mb-1">
-            <span className="font-display text-xs text-gold truncate">{player.name}</span>
-            <span className="font-display text-[10px] text-muted-foreground">Lv.{player.level}</span>
-          </div>
-          <div className="h-2 bg-secondary rounded-full overflow-hidden border border-border">
-            <motion.div
-              className={`h-full ${hpColor(playerHpPct)} rounded-full`}
-              animate={{ width: `${Math.max(0, playerHpPct)}%` }}
-              transition={{ duration: 0.5 }}
-            />
-          </div>
-          <div className="text-[9px] text-right text-foreground mt-0.5 font-display">
-            HP {player.hp}/{player.maxHp}
-          </div>
-          {player.maxMp !== undefined && (
-            <>
-              <div className="h-1.5 bg-secondary rounded-full overflow-hidden border border-border mt-1">
+        {/* Enemies row - top */}
+        <div className="absolute top-0 right-0 left-0 flex justify-end items-start gap-2 p-3 z-10">
+          {enemyList.map((e, idx) => {
+            const pct = e.maxHp > 0 ? (e.hp / e.maxHp) * 100 : 0;
+            const isAttackingTarget = attackingSide === 'player' && idx === 0;
+            const shakeThis = shakeEnemy && idx === 0;
+            const isClickable = !!onTargetEnemy && !e.isDefeated && !!e.id;
+            return (
+              <motion.div
+                key={e.id || `enemy-${idx}`}
+                className="flex flex-col items-center gap-1"
+                initial={{ x: 200, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: idx * 0.1 }}
+              >
+                {/* Stats panel above sprite */}
+                <div className={`bg-card/90 backdrop-blur-sm border-2 ${e.isTarget ? 'border-blood' : 'border-gold/60'} rounded-lg p-1.5 min-w-[120px] shadow-md`}>
+                  <div className="flex items-baseline justify-between gap-1">
+                    <span className="font-display text-[10px] text-foreground truncate">{e.name}</span>
+                    <span className="font-display text-[9px] text-muted-foreground">Lv.{e.level}</span>
+                  </div>
+                  <div className="h-1.5 bg-secondary rounded-full overflow-hidden border border-border mt-0.5">
+                    <motion.div
+                      className={`h-full ${hpColor(pct)} rounded-full`}
+                      animate={{ width: `${Math.max(0, pct)}%` }}
+                      transition={{ duration: 0.4 }}
+                    />
+                  </div>
+                  <div className="text-[8px] text-right text-muted-foreground font-display">{e.hp}/{e.maxHp}</div>
+                </div>
+                {/* Sprite */}
                 <motion.div
-                  className="h-full bg-mana rounded-full"
-                  animate={{ width: `${Math.max(0, playerMpPct)}%` }}
+                  className={`relative ${enemySize} ${isClickable ? 'cursor-pointer' : ''}`}
+                  onClick={() => isClickable && onTargetEnemy!(e.id!)}
+                  animate={
+                    e.isDefeated
+                      ? { opacity: 0, y: 60, rotateZ: 25, scale: 0.8 }
+                      : shakeThis
+                        ? { x: [0, -10, 10, -8, 8, 0] }
+                        : isAttackingTarget
+                          ? { x: [0, -30, 0], scale: [1, 1.05, 1] }
+                          : {}
+                  }
+                  whileHover={isClickable ? { scale: 1.05 } : {}}
+                  transition={{ duration: e.isDefeated ? 0.8 : 0.3 }}
+                >
+                  <motion.img
+                    src={getEnemySprite(e.name, e.icon)}
+                    alt={e.name}
+                    className="w-full h-full object-contain pixelated drop-shadow-[0_8px_8px_rgba(0,0,0,0.5)]"
+                    animate={pct < 30 && !e.isDefeated ? { y: [0, -3, 0] } : {}}
+                    transition={{ duration: 0.8, repeat: Infinity }}
+                    style={{ imageRendering: 'pixelated' }}
+                  />
+                  {e.isTarget && !e.isDefeated && (
+                    <motion.div
+                      className="absolute -top-2 left-1/2 -translate-x-1/2 text-blood text-lg"
+                      animate={{ y: [0, -3, 0] }}
+                      transition={{ duration: 0.6, repeat: Infinity }}
+                    >▼</motion.div>
+                  )}
+                  {!e.isDefeated && (
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3/4 h-2 bg-black/40 rounded-full blur-sm" />
+                  )}
+                </motion.div>
+              </motion.div>
+            );
+          })}
+          {enemyBadges && <div className="absolute top-12 right-3 flex flex-wrap gap-1 max-w-[160px] justify-end">{enemyBadges}</div>}
+        </div>
+
+        {/* Players row - bottom */}
+        <div className="absolute bottom-0 left-0 right-0 flex justify-start items-end gap-2 p-3 z-10">
+          {playerList.map((p, idx) => {
+            const pct = p.maxHp > 0 ? (p.hp / p.maxHp) * 100 : 0;
+            const mpPct = p.maxMp && p.maxMp > 0 ? ((p.mp || 0) / p.maxMp) * 100 : 0;
+            const isAttacker = attackingSide === 'player' && p.isActive;
+            const shakeThis = shakePlayer && p.isActive;
+            const sprite = getPlayerSprite(p.charClass || playerClass || 'warrior');
+            return (
+              <motion.div
+                key={p.id || `player-${idx}`}
+                className="flex flex-col items-center gap-1"
+                initial={{ x: -200, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: idx * 0.1 }}
+              >
+                {/* Sprite */}
+                <motion.div
+                  className={`relative ${playerSize}`}
+                  animate={
+                    p.isDefeated
+                      ? { opacity: 0.35, y: 30, rotateZ: -15 }
+                      : shakeThis
+                        ? { x: [0, -8, 8, -5, 5, 0] }
+                        : isAttacker
+                          ? { x: [0, 40, 0], scale: [1, 1.05, 1] }
+                          : {}
+                  }
                   transition={{ duration: 0.4 }}
-                />
-              </div>
-              <div className="text-[8px] text-right text-mana mt-0.5 font-display">
-                MP {player.mp}/{player.maxMp}
-              </div>
-            </>
-          )}
-          {playerBadges && <div className="flex flex-wrap gap-1 mt-1">{playerBadges}</div>}
-        </motion.div>
+                >
+                  <motion.img
+                    src={sprite}
+                    alt={p.name}
+                    className="w-full h-full object-contain drop-shadow-[0_8px_8px_rgba(0,0,0,0.5)]"
+                    animate={pct < 25 && !p.isDefeated ? { y: [0, -2, 0] } : {}}
+                    transition={{ duration: 0.6, repeat: Infinity }}
+                    style={{ imageRendering: 'pixelated' }}
+                  />
+                  {p.isActive && !p.isDefeated && (
+                    <motion.div
+                      className="absolute -top-2 left-1/2 -translate-x-1/2 text-gold text-lg"
+                      animate={{ y: [0, -3, 0] }}
+                      transition={{ duration: 0.6, repeat: Infinity }}
+                    >▼</motion.div>
+                  )}
+                  {!p.isDefeated && (
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3/4 h-2 bg-black/40 rounded-full blur-sm" />
+                  )}
+                </motion.div>
+                {/* Stats below sprite */}
+                <div className={`bg-card/90 backdrop-blur-sm border-2 ${p.isActive ? 'border-gold' : 'border-gold/40'} rounded-lg p-1.5 min-w-[130px] shadow-md`}>
+                  <div className="flex items-baseline justify-between gap-1">
+                    <span className={`font-display text-[10px] truncate ${p.isActive ? 'text-gold' : 'text-foreground'}`}>{p.name}</span>
+                    <span className="font-display text-[9px] text-muted-foreground">Lv.{p.level}</span>
+                  </div>
+                  <div className="h-1.5 bg-secondary rounded-full overflow-hidden border border-border mt-0.5">
+                    <motion.div
+                      className={`h-full ${hpColor(pct)} rounded-full`}
+                      animate={{ width: `${Math.max(0, pct)}%` }}
+                      transition={{ duration: 0.4 }}
+                    />
+                  </div>
+                  <div className="text-[8px] text-right text-foreground font-display">{p.hp}/{p.maxHp}</div>
+                  {p.maxMp !== undefined && (
+                    <div className="h-1 bg-secondary rounded-full overflow-hidden border border-border mt-0.5">
+                      <motion.div
+                        className="h-full bg-mana rounded-full"
+                        animate={{ width: `${Math.max(0, mpPct)}%` }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+          {playerBadges && <div className="absolute bottom-20 left-3 flex flex-wrap gap-1 max-w-[160px]">{playerBadges}</div>}
+        </div>
       </div>
 
       {/* Bottom dialogue + action box (Pokemon-style) */}
