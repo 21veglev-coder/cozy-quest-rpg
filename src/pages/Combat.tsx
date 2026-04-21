@@ -7,6 +7,7 @@ import { GameCharacter, InventoryItem, EnemyDef, ENEMIES, GameLocation, SET_BONU
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Swords, Dice6, Heart, Zap, Shield, Flame } from 'lucide-react';
 import { toast } from 'sonner';
+import PokemonBattleScene from '@/components/PokemonBattleScene';
 
 interface CombatState {
   playerHp: number;
@@ -461,260 +462,151 @@ const Combat = () => {
       </header>
 
       <div className="flex-1 flex flex-col lg:flex-row gap-3 p-3">
-        {/* Battle Arena */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 relative">
-          {/* Floating Damage Numbers */}
-          <AnimatePresence>
-            {combat.floatingDmg.map(f => (
-              <div key={f.id} className="absolute top-1/2 left-1/2 z-50" style={{ transform: `translate(${f.x}px, ${f.y}px)` }}>
-                <FloatingNumber value={f.value} type={f.type} />
-              </div>
-            ))}
-          </AnimatePresence>
-
-          {/* Enemy Card */}
-          <motion.div
-            className="rpg-panel p-5 text-center w-72 relative overflow-hidden"
-            animate={shakeEnemy
-              ? { x: [0, -8, 8, -5, 5, 0], transition: { duration: 0.3 } }
-              : combat.enemyHp <= 0 ? { opacity: 0.3, scale: 0.9, rotateZ: -5 } : {}
-            }
-          >
-            {/* Enemy HP bar background glow */}
-            {enemyHpPercent < 30 && combat.enemyHp > 0 && (
-              <motion.div
-                animate={{ opacity: [0.1, 0.3, 0.1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-                className="absolute inset-0 bg-destructive/10 rounded"
-              />
-            )}
-            <div className="relative">
-              <motion.div
-                className="text-5xl mb-2"
-                animate={combat.enemyHp > 0 && enemyHpPercent < 30 ? { scale: [1, 1.1, 1] } : {}}
-                transition={{ duration: 0.8, repeat: Infinity }}
-              >
-                {enemy.icon}
-              </motion.div>
-              <p className="font-display text-foreground text-sm">{enemy.name}</p>
-              <p className="text-[10px] text-muted-foreground mb-2">Lv.{enemy.level} · {enemy.locationType.toUpperCase()}</p>
-
-              {/* Enemy HP Bar */}
-              <div className="h-4 bg-secondary rounded-full overflow-hidden border border-border relative">
-                <motion.div
-                  className={`h-full rounded-full ${enemyHpPercent < 30 ? 'bg-destructive' : 'bg-blood'}`}
-                  animate={{ width: `${enemyHpPercent}%` }}
-                  transition={{ duration: 0.4, ease: 'easeOut' }}
-                />
-                <span className="absolute inset-0 flex items-center justify-center text-[9px] font-display text-foreground">
-                  {combat.enemyHp}/{combat.enemyMaxHp}
-                </span>
-              </div>
-
-              {/* Enemy buffs */}
-              {combat.enemyBuffs.length > 0 && (
-                <div className="flex justify-center gap-1 mt-2 flex-wrap">
-                  {combat.enemyBuffs.map((b, i) => (
-                    <motion.span
-                      key={i}
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="text-[8px] bg-destructive/20 text-destructive px-1.5 py-0.5 rounded font-display"
-                    >
-                      {b.name || 'Buff'} ({b.turns}t)
-                    </motion.span>
-                  ))}
-                </div>
-              )}
-              {/* Enemy debuffs from player */}
-              {combat.debuffs.length > 0 && (
-                <div className="flex justify-center gap-1 mt-1 flex-wrap">
-                  {combat.debuffs.map((d, i) => (
-                    <span key={i} className="text-[8px] bg-mana/20 text-mana px-1.5 py-0.5 rounded font-display">
-                      {d.atk !== 0 && `ATK${d.atk}`} {d.def !== 0 && `DEF${d.def}`} ({d.turns}t)
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* VS Divider */}
-          <motion.div
-            className="text-xl text-gold font-display flex items-center gap-2"
-            animate={{ scale: rolling ? [1, 1.2, 1] : 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <span className="text-muted-foreground text-xs">Kör {combat.turn}</span>
-            ⚔️
-            <span className="text-muted-foreground text-xs">
-              {combat.combo > 0 && `${combat.combo}x🔥`}
-            </span>
-          </motion.div>
-
-          {/* Player Card */}
-          <motion.div
-            className="rpg-panel-gold p-5 text-center w-72 relative"
-            animate={shakePlayer
-              ? { x: [0, -6, 6, -4, 4, 0], transition: { duration: 0.3 } }
-              : {}
-            }
-          >
-            <p className="font-display text-gold text-sm">{character.name}</p>
-            <p className="text-[10px] text-muted-foreground mb-2">Lv.{character.level}</p>
-
-            {/* HP Bar */}
-            <div className="h-4 bg-secondary rounded-full overflow-hidden border border-border relative mb-1">
-              <motion.div
-                className={`h-full rounded-full ${hpPercent < 25 ? 'bg-destructive' : 'bg-nature'}`}
-                animate={{ width: `${hpPercent}%` }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
-              />
-              <span className="absolute inset-0 flex items-center justify-center text-[9px] font-display text-foreground">
-                ❤️ {combat.playerHp}/{totalHp}
+        {/* Pokemon-style Battle Arena */}
+        <div className="flex-1">
+          <PokemonBattleScene
+            playerClass={character.class}
+            player={{ name: character.name, level: character.level, hp: combat.playerHp, maxHp: totalHp, mp: combat.playerMp, maxMp: totalMp }}
+            enemyName={enemy.name}
+            enemyIcon={enemy.icon}
+            enemyLevel={enemy.level}
+            enemyHp={combat.enemyHp}
+            enemyMaxHp={combat.enemyMaxHp}
+            attackingSide={rolling ? 'player' : null}
+            shakePlayer={shakePlayer}
+            shakeEnemy={shakeEnemy}
+            enemyDefeated={combat.enemyHp <= 0}
+            playerDefeated={combat.playerHp <= 0}
+            locationType={enemy.locationType}
+            world={enemy.world}
+            playerBadges={combat.buffs.length > 0 ? combat.buffs.map((b, i) => (
+              <span key={i} className="text-[8px] bg-nature/20 text-nature px-1.5 py-0.5 rounded font-display">
+                {b.atk > 0 && `+${b.atk}A `}{b.def > 0 && `+${b.def}D `}{b.crit > 0 && `+${b.crit}%C `}({b.turns}t)
               </span>
-            </div>
-
-            {/* MP Bar */}
-            <div className="h-3 bg-secondary rounded-full overflow-hidden border border-border relative">
-              <motion.div
-                className="h-full bg-mana rounded-full"
-                animate={{ width: `${mpPercent}%` }}
-                transition={{ duration: 0.4 }}
-              />
-              <span className="absolute inset-0 flex items-center justify-center text-[8px] font-display text-foreground">
-                💧 {combat.playerMp}/{totalMp}
-              </span>
-            </div>
-
-            {/* Player buffs */}
-            {combat.buffs.length > 0 && (
-              <div className="flex justify-center gap-1 mt-2 flex-wrap">
-                {combat.buffs.map((b, i) => (
-                  <motion.span
-                    key={i}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="text-[8px] bg-nature/20 text-nature px-1.5 py-0.5 rounded font-display"
-                  >
-                    {b.atk > 0 && `+${b.atk}A`} {b.def > 0 && `+${b.def}D`} {b.crit > 0 && `+${b.crit}%C`} ({b.turns}t)
-                  </motion.span>
+            )) : null}
+            enemyBadges={(combat.enemyBuffs.length > 0 || combat.debuffs.length > 0) ? (
+              <>
+                {combat.enemyBuffs.map((b, i) => (
+                  <span key={`eb${i}`} className="text-[8px] bg-destructive/20 text-destructive px-1.5 py-0.5 rounded font-display">
+                    {b.name || 'Buff'} ({b.turns}t)
+                  </span>
                 ))}
-              </div>
-            )}
-          </motion.div>
-
-          {/* Action Cards */}
-          <div className="w-full max-w-md">
-            {!combat.finished ? (
-              <div className="space-y-2">
-                {/* Main Actions as Cards */}
-                <div className="grid grid-cols-3 gap-2">
-                  <motion.button
-                    whileHover={{ scale: 1.05, y: -4 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={doTurn}
-                    disabled={rolling}
-                    className="rpg-panel p-3 flex flex-col items-center gap-1 cursor-pointer hover:border-glow transition-all disabled:opacity-40"
-                  >
-                    <Dice6 className="w-6 h-6 text-ember" />
-                    <span className="font-display text-[10px] text-foreground">Támadás</span>
-                    <span className="text-[8px] text-muted-foreground">D20 + ATK</span>
-                  </motion.button>
-
-                  <motion.button
-                    whileHover={{ scale: 1.05, y: -4 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={usePotion}
-                    disabled={rolling || !items.some(i => i.type === 'potion' && i.hp_bonus > 0)}
-                    className="rpg-panel p-3 flex flex-col items-center gap-1 cursor-pointer hover:border-glow transition-all disabled:opacity-40"
-                  >
-                    <Heart className="w-6 h-6 text-blood" />
-                    <span className="font-display text-[10px] text-foreground">Gyógyital</span>
-                    <span className="text-[8px] text-muted-foreground">
-                      {items.filter(i => i.type === 'potion' && i.hp_bonus > 0).length}x
-                    </span>
-                  </motion.button>
-
-                  <motion.button
-                    whileHover={{ scale: 1.05, y: -4 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setSelectedAction(selectedAction === 'skills' ? null : 'skills')}
-                    className={`rpg-panel p-3 flex flex-col items-center gap-1 cursor-pointer transition-all ${selectedAction === 'skills' ? 'border-glow' : 'hover:border-glow'}`}
-                  >
-                    <Zap className="w-6 h-6 text-mana" />
-                    <span className="font-display text-[10px] text-foreground">Képességek</span>
-                    <span className="text-[8px] text-muted-foreground">{availableSkills.length}db</span>
-                  </motion.button>
-                </div>
-
-                {/* Skill Cards - Expandable */}
-                <AnimatePresence>
-                  {selectedAction === 'skills' && availableSkills.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="grid grid-cols-2 gap-1.5 overflow-hidden"
-                    >
-                      {availableSkills.map(skill => {
-                        const cd = combat.cooldowns[skill.id] || 0;
-                        const canUse = cd === 0 && combat.playerMp >= skill.mpCost;
-                        return (
-                          <motion.button
-                            key={skill.id}
-                            whileHover={canUse ? { scale: 1.03, y: -2 } : {}}
-                            whileTap={canUse ? { scale: 0.97 } : {}}
-                            onClick={() => canUse && useSkill(skill)}
-                            disabled={!canUse || rolling}
-                            className={`rpg-panel p-2 text-left cursor-pointer transition-all ${canUse ? 'hover:border-glow' : 'opacity-40'}`}
-                          >
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-base">{skill.icon}</span>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-display text-[10px] text-foreground truncate">{skill.name}</p>
-                                <p className="text-[8px] text-muted-foreground truncate">{skill.description}</p>
-                              </div>
-                            </div>
-                            <div className="flex justify-between mt-1 text-[8px]">
-                              <span className="text-mana">{skill.mpCost} MP</span>
-                              {cd > 0 ? (
-                                <span className="text-destructive font-display">CD: {cd}</span>
-                              ) : (
-                                <span className="text-muted-foreground">{skill.cooldown}t CD</span>
-                              )}
-                            </div>
-                          </motion.button>
-                        );
-                      })}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center space-y-3"
-              >
-                <div className={`text-3xl font-display ${combat.result === 'win' ? 'text-gold text-glow-gold' : 'text-blood'}`}>
-                  {combat.result === 'win' ? '🏆 Győzelem!' : '💀 Vereség...'}
-                </div>
-                {combat.result === 'win' && (
-                  <div className="text-sm text-muted-foreground">
-                    +{enemy.xpReward} XP · +{enemy.goldReward + Math.floor(combat.combo * 2)}💰
-                    {combat.droppedItem && <span className="text-shadow ml-1">· 🎁 {combat.droppedItem}</span>}
+                {combat.debuffs.map((d, i) => (
+                  <span key={`d${i}`} className="text-[8px] bg-mana/20 text-mana px-1.5 py-0.5 rounded font-display">
+                    {d.atk !== 0 && `ATK${d.atk} `}{d.def !== 0 && `DEF${d.def} `}({d.turns}t)
+                  </span>
+                ))}
+              </>
+            ) : null}
+            floatingNumbers={
+              <AnimatePresence>
+                {combat.floatingDmg.map(f => (
+                  <div key={f.id} className="absolute top-1/2 left-1/2 z-50" style={{ transform: `translate(${f.x}px, ${f.y}px)` }}>
+                    <FloatingNumber value={f.value} type={f.type} />
                   </div>
-                )}
-                <div className="flex gap-3 justify-center">
-                  <Button onClick={() => loadData()} className="font-display glow-ember">
-                    <Swords className="w-4 h-4 mr-1" /> Új harc
-                  </Button>
-                  <Button variant="outline" onClick={() => navigate('/lobby')} className="font-display">Vissza</Button>
+                ))}
+              </AnimatePresence>
+            }
+            dialogue={
+              combat.finished
+                ? combat.result === 'win'
+                  ? `🏆 Győztél! +${enemy.xpReward} XP · +${enemy.goldReward + Math.floor(combat.combo * 2)} 💰${combat.droppedItem ? ` · 🎁 ${combat.droppedItem}` : ''}`
+                  : `💀 Vereséget szenvedtél a ${enemy.name} ellen...`
+                : combat.log[combat.log.length - 1] || `Mit teszel? Kör ${combat.turn}${combat.combo > 0 ? ` · 🔥 ${combat.combo}x Combo` : ''}`
+            }
+            actionMenu={
+              !combat.finished ? (
+                <div className="space-y-1.5">
+                  {selectedAction !== 'skills' ? (
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <motion.button
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={doTurn}
+                        disabled={rolling}
+                        className="rpg-panel p-2 flex items-center gap-1.5 cursor-pointer hover:border-glow disabled:opacity-40"
+                      >
+                        <Dice6 className="w-4 h-4 text-ember" />
+                        <span className="font-display text-[11px] text-foreground">Támadás</span>
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => setSelectedAction('skills')}
+                        disabled={rolling || availableSkills.length === 0}
+                        className="rpg-panel p-2 flex items-center gap-1.5 cursor-pointer hover:border-glow disabled:opacity-40"
+                      >
+                        <Zap className="w-4 h-4 text-mana" />
+                        <span className="font-display text-[11px] text-foreground">Képesség</span>
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={usePotion}
+                        disabled={rolling || !items.some(i => i.type === 'potion' && i.hp_bonus > 0)}
+                        className="rpg-panel p-2 flex items-center gap-1.5 cursor-pointer hover:border-glow disabled:opacity-40"
+                      >
+                        <Heart className="w-4 h-4 text-blood" />
+                        <span className="font-display text-[11px] text-foreground">
+                          Ital ({items.filter(i => i.type === 'potion' && i.hp_bonus > 0).length})
+                        </span>
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => navigate('/lobby')}
+                        className="rpg-panel p-2 flex items-center gap-1.5 cursor-pointer hover:border-glow"
+                      >
+                        <ArrowLeft className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-display text-[11px] text-foreground">Menekülés</span>
+                      </motion.button>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-display text-[10px] text-gold">⚡ Képességek</span>
+                        <button
+                          onClick={() => setSelectedAction(null)}
+                          className="text-[10px] text-muted-foreground hover:text-foreground"
+                        >
+                          ← Vissza
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 gap-1 max-h-[100px] overflow-y-auto">
+                        {availableSkills.map(skill => {
+                          const cd = combat.cooldowns[skill.id] || 0;
+                          const canUse = cd === 0 && combat.playerMp >= skill.mpCost;
+                          return (
+                            <button
+                              key={skill.id}
+                              onClick={() => canUse && useSkill(skill)}
+                              disabled={!canUse || rolling}
+                              className={`rpg-panel p-1.5 text-left flex items-center gap-1.5 ${canUse ? 'hover:border-glow cursor-pointer' : 'opacity-40 cursor-not-allowed'}`}
+                              title={skill.description}
+                            >
+                              <span className="text-sm">{skill.icon}</span>
+                              <span className="font-display text-[10px] text-foreground flex-1 truncate">{skill.name}</span>
+                              <span className="text-[9px] text-mana">{skill.mpCost}MP</span>
+                              {cd > 0 && <span className="text-[9px] text-destructive">CD{cd}</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </motion.div>
-            )}
-          </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-1.5">
+                  <Button onClick={() => loadData()} size="sm" className="font-display text-xs">
+                    <Swords className="w-3 h-3 mr-1" /> Új harc
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/lobby')} className="font-display text-xs">
+                    Vissza
+                  </Button>
+                </div>
+              )
+            }
+          />
         </div>
 
         {/* Combat Log */}
