@@ -522,6 +522,60 @@ export type Database = {
         }
         Relationships: []
       }
+      team_combat: {
+        Row: {
+          created_at: string
+          current_actor_id: string | null
+          enemies: Json
+          finished: boolean
+          id: string
+          location_id: string | null
+          log: Json
+          max_waves: number
+          members_state: Json
+          result: string | null
+          rewards: Json | null
+          team_id: string
+          turn: number
+          updated_at: string
+          wave: number
+        }
+        Insert: {
+          created_at?: string
+          current_actor_id?: string | null
+          enemies?: Json
+          finished?: boolean
+          id?: string
+          location_id?: string | null
+          log?: Json
+          max_waves?: number
+          members_state?: Json
+          result?: string | null
+          rewards?: Json | null
+          team_id: string
+          turn?: number
+          updated_at?: string
+          wave?: number
+        }
+        Update: {
+          created_at?: string
+          current_actor_id?: string | null
+          enemies?: Json
+          finished?: boolean
+          id?: string
+          location_id?: string | null
+          log?: Json
+          max_waves?: number
+          members_state?: Json
+          result?: string | null
+          rewards?: Json | null
+          team_id?: string
+          turn?: number
+          updated_at?: string
+          wave?: number
+        }
+        Relationships: []
+      }
       team_members: {
         Row: {
           character_id: string
