@@ -16,6 +16,7 @@ import Perks from "./pages/Perks";
 import Prestige from "./pages/Prestige";
 import Clans from "./pages/Clans";
 import Teams from "./pages/Teams";
+import TeamCombat from "./pages/TeamCombat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/prestige" element={<Prestige />} />
             <Route path="/clans" element={<Clans />} />
             <Route path="/teams" element={<Teams />} />
+            <Route path="/team-combat/:teamId" element={<TeamCombat />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
