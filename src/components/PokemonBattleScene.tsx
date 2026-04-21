@@ -3,24 +3,44 @@ import { ReactNode } from 'react';
 import { getPlayerSprite, getEnemySprite, getBattleBackground } from '@/lib/sprites';
 
 interface BattleStats {
+  id?: string;
   name: string;
   level: number;
   hp: number;
   maxHp: number;
   mp?: number;
   maxMp?: number;
+  charClass?: string;
+  isActive?: boolean;
+  isDefeated?: boolean;
+}
+
+interface EnemyStats {
+  id?: string;
+  name: string;
+  icon: string;
+  level: number;
+  hp: number;
+  maxHp: number;
+  isTarget?: boolean;
+  isDefeated?: boolean;
 }
 
 interface PokemonBattleSceneProps {
-  // Player
-  playerClass: string;
-  player: BattleStats;
-  // Enemy
-  enemyName: string;
-  enemyIcon: string;
-  enemyLevel: number;
-  enemyHp: number;
-  enemyMaxHp: number;
+  // Player(s) — pass single via `player`+`playerClass` OR multiple via `players`
+  playerClass?: string;
+  player?: BattleStats;
+  players?: BattleStats[];
+  // Enemy — single via `enemyName/Icon/...` OR multiple via `enemies`
+  enemyName?: string;
+  enemyIcon?: string;
+  enemyLevel?: number;
+  enemyHp?: number;
+  enemyMaxHp?: number;
+  enemies?: EnemyStats[];
+  // Wave indicator
+  wave?: number;
+  maxWaves?: number;
   // Visual state
   attackingSide: 'player' | 'enemy' | null;
   shakePlayer?: boolean;
@@ -38,6 +58,8 @@ interface PokemonBattleSceneProps {
   dialogue?: string;
   // Action menu (rendered at bottom-right of dialogue)
   actionMenu?: ReactNode;
+  // Click handler for selecting a target enemy (when enemies array given)
+  onTargetEnemy?: (enemyId: string) => void;
 }
 
 /**
