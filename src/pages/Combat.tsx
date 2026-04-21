@@ -7,6 +7,7 @@ import { GameCharacter, InventoryItem, EnemyDef, ENEMIES, GameLocation, SET_BONU
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Swords, Dice6, Heart, Zap, Shield, Flame } from 'lucide-react';
 import { toast } from 'sonner';
+import PokemonBattleScene from '@/components/PokemonBattleScene';
 
 interface CombatState {
   playerHp: number;
