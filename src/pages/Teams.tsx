@@ -157,11 +157,17 @@ const Teams = () => {
     if (!myTeam || !myTeam.target_location_id) return;
     if (!myTeamMembers.every(m => m.ready)) { toast.error('Nem mindenki kész!'); return; }
     await supabase.from('teams').update({ status: 'in_progress' }).eq('id', myTeam.id);
-    const loc = locations.find(l => l.id === myTeam.target_location_id);
-    if (loc?.type === 'zone') {
-      navigate(`/combat/${myTeam.target_location_id}`);
+    // Solo party (1 member) → use the existing solo flow.
+    // 2+ members → use the new shared real-time team combat scene.
+    if (myTeamMembers.length <= 1) {
+      const loc = locations.find(l => l.id === myTeam.target_location_id);
+      if (loc?.type === 'zone') {
+        navigate(`/combat/${myTeam.target_location_id}`);
+      } else {
+        navigate(`/dungeon/${myTeam.target_location_id}`);
+      }
     } else {
-      navigate(`/dungeon/${myTeam.target_location_id}`);
+      navigate(`/team-combat/${myTeam.id}`);
     }
   };
 
